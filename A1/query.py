@@ -2,7 +2,7 @@ import random
 
 from dns import DnsHeader, DnsQuestion
 
-def create_query(domain_name, query_type):
+def create_query_packet(domain_name, query_type):
     # Create the header
     ID = random.getrandbits(16)
     QR = 0b0  # Signifies that the message is a query
