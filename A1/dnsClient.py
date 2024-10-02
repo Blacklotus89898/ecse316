@@ -10,7 +10,7 @@ python dnsClient.py [-t timeout] [-r max-retries] [-p port] [-mx|-ns] @server na
       unanswered query. Default value: 5.
 
     • max-retries(optional) is the maximum number of times to retransmit an unanswered
-      query before giving up. Default value: 3.
+      query before giving up. Default value: 3.    python dnsClient.py -t 1 -r 1 @8.8.8.8 www.example.com
 
     • port (optional) is the UDP port number of the DNS server. Default value: 53.
 
@@ -57,6 +57,8 @@ def parse_command_call():
 # (inspired by: https://docs.python.org/3/library/socket.html#functions)
 # (inspired by: https://docs.python.org/3/library/socket.html)
 # (inspired by: https://stackoverflow.com/questions/13999393/python-socket-sendto)
+from response import parse_dns_response
+import time
 def send_query():
     timeout, max_retries, port, query_type, server, domain_name = parse_command_call()
 
@@ -69,6 +71,12 @@ def send_query():
     while (retries < max_retries):
         try:
             udp_socket.sendto(query_packet, (server, port))
+            response, _ = udp_socket.recvfrom(1024)
+            if response:
+                parse_dns_response(response, domain_name, server, query_type, time.time(),retries)
+                # print(f"Received response: {response.hex()}")    # For debugging purposes
+                # print(f"Received response no hex: {response}")    # For debugging purposes
+                break
 
         except Exception as e:
             print(f"Error occurred: {e}")
@@ -87,13 +95,17 @@ def main():
     '''
 
     # Test the parser for the command line arguments
-    timeout, max_retries, port, query_type, server, domain_name = parse_command_call()
-    print(f"Timeout: {timeout}")
-    print(f"Max retries: {max_retries}")
-    print(f"Port: {port}")
-    print(f"Query type: {query_type}")
-    print(f"Server: {server}")
-    print(f"Domain: {domain_name}")
+    # timeout, max_retries, port, query_type, server, domain_name = parse_command_call()
+    # print(f"Timeout: {timeout}")
+    # print(f"Max retries: {max_retries}")
+    # print(f"Port: {port}")
+    # print(f"Query type: {query_type}")
+    # print(f"Server: {server}")
+    # print(f"Domain: {domain_name}")
+
+
+    # Test the sending of the query
+    send_query()
 
 
 
