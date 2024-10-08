@@ -3,6 +3,22 @@ import socket
 import time
 
 def parse_dns_response(response, query_name, server_ip, request_type, start_time, retries):
+    def read_name(response, offset):
+        labels = []
+        while True:
+            length = response[offset]
+            if length & 0xC0 == 0xC0:  # Pointer
+                pointer = struct.unpack(">H", response[offset:offset + 2])[0]
+                offset += 2
+                return read_name(response, pointer & 0x3FFF)[0], offset
+            if length == 0:  # End of name
+                offset += 1
+                break
+            offset += 1
+            labels.append(response[offset:offset + length].decode())
+            offset += length
+        return ".".join(labels), offset
+
     try:
         # Parse the DNS header
         header = response[:12]
@@ -27,17 +43,15 @@ def parse_dns_response(response, query_name, server_ip, request_type, start_time
         # Skip the Question section
         index = 12
         for _ in range(questions):
-            while response[index] != 0:
-                index += response[index] + 1
-            index += 5  # Skip null byte and QTYPE, QCLASS fields
+            _, index = read_name(response, index)
+            index += 4  # Skip QTYPE and QCLASS
 
         # Parse the Answer section
         if answer_rrs > 0:
             print(f"***Answer Section ({answer_rrs} records)***")
             for i in range(answer_rrs):
                 # Parse the answer name
-                name = struct.unpack(">H", response[index:index + 2])[0]
-                index += 2
+                name, index = read_name(response, index)
                 
                 # Parse the rest of the answer fields
                 answer_type, answer_class, ttl, data_length = struct.unpack(">HHIH", response[index:index + 10])
@@ -51,14 +65,14 @@ def parse_dns_response(response, query_name, server_ip, request_type, start_time
                     ip_address = socket.inet_ntoa(response[index:index + data_length])
                     print(f"IP\t{ip_address}\t{ttl}\t{auth}")
                 elif answer_type == 5:  # Type CNAME
-                    cname = response[index:index + data_length].decode()
+                    cname, _ = read_name(response, index)
                     print(f"CNAME\t{cname}\t{ttl}\t{auth}")
                 elif answer_type == 15:  # Type MX
                     preference = struct.unpack(">H", response[index:index + 2])[0]
-                    mx = response[index + 2:index + data_length].decode()
+                    mx, _ = read_name(response, index + 2)
                     print(f"MX\t{mx}\t{preference}\t{ttl}\t{auth}")
                 elif answer_type == 2:  # Type NS
-                    ns = response[index:index + data_length].decode()
+                    ns, _ = read_name(response, index)
                     print(f"NS\t{ns}\t{ttl}\t{auth}")
                 else:
                     print("  Non-A record type")
@@ -72,8 +86,7 @@ def parse_dns_response(response, query_name, server_ip, request_type, start_time
             print(f"***Additional Section ({additional_rrs} records)***")
             for i in range(additional_rrs):
                 # Parse the additional record name
-                name = struct.unpack(">H", response[index:index + 2])[0]
-                index += 2
+                name, index = read_name(response, index)
                 
                 # Parse the rest of the additional record fields
                 additional_type, additional_class, ttl, data_length = struct.unpack(">HHIH", response[index:index + 10])
@@ -87,14 +100,14 @@ def parse_dns_response(response, query_name, server_ip, request_type, start_time
                     ip_address = socket.inet_ntoa(response[index:index + data_length])
                     print(f"IP\t{ip_address}\t{ttl}\t{auth}")
                 elif additional_type == 5:  # Type CNAME
-                    cname = response[index:index + data_length].decode()
+                    cname, _ = read_name(response, index)
                     print(f"CNAME\t{cname}\t{ttl}\t{auth}")
                 elif additional_type == 15:  # Type MX
                     preference = struct.unpack(">H", response[index:index + 2])[0]
-                    mx = response[index + 2:index + data_length].decode()
+                    mx, _ = read_name(response, index + 2)
                     print(f"MX\t{mx}\t{preference}\t{ttl}\t{auth}")
                 elif additional_type == 2:  # Type NS
-                    ns = response[index:index + data_length].decode()
+                    ns, _ = read_name(response, index)
                     print(f"NS\t{ns}\t{ttl}\t{auth}")
                 else:
                     print("  Non-A record type")
