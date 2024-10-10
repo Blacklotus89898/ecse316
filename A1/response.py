@@ -1,117 +1,111 @@
 import struct
 import socket
-import time
 
-def parse_dns_response(response, query_name, server_ip, request_type, start_time, retries):
-    def read_name(response, offset):
+class DNSResponse:
+    def __init__(self, response, query_name, server_ip, request_type):
+        self.response = response
+        self.query_name = query_name
+        self.server_ip = server_ip
+        self.request_type = request_type
+        self.index = 0
+        self.flags = 0
+
+    def read_name(self, offset):
         labels = []
         while True:
-            length = response[offset]
-            if length & 0xC0 == 0xC0:  # Pointer
-                pointer = struct.unpack(">H", response[offset:offset + 2])[0]
+            length = self.response[offset]
+            if length & 0xC0 == 0xC0:  # Pointer to another location so compressed
+                pointer = struct.unpack(">H", self.response[offset:offset + 2])[0]
                 offset += 2
-                return read_name(response, pointer & 0x3FFF)[0], offset
+                return self.read_name(pointer & 0x3FFF)[0], offset
             if length == 0:  # End of name
                 offset += 1
                 break
             offset += 1
-            labels.append(response[offset:offset + length].decode())
+            labels.append(self.response[offset:offset + length].decode())
             offset += length
         return ".".join(labels), offset
 
-    try:
-        # Parse the DNS header
-        header = response[:12]
+    def parse_header(self):
+        if len(self.response) < 12:
+            raise ValueError("Invalid DNS response: too short")
+        header = self.response[:12]
         (
-            transaction_id,  # ID
-            flags,           # Flags
-            questions,       # Number of Questions
-            answer_rrs,      # Number of Answer Resource Records
-            authority_rrs,   # Number of Authority Resource Records
-            additional_rrs   # Number of Additional Resource Records
+            self.transaction_id,
+            self.flags,
+            self.questions,
+            self.answer_rrs,
+            self.authority_rrs,
+            self.additional_rrs
         ) = struct.unpack(">HHHHHH", header)
-        
-        # Print query summary
-        print(f"DnsClient sending request for {query_name}")
-        print(f"Server: {server_ip}")
-        print(f"Request type: {request_type}")
+        self.index = 12
 
-        # Calculate response time
-        response_time = time.time() - start_time
-        print(f"Response received after {response_time:.5f} seconds ({retries} retries)")
+        # Check for errors in the response
+        rcode = self.flags & 0x000F
+        if rcode != 0:
+            self.output_error(rcode)
 
-        # Skip the Question section
-        index = 12
-        for _ in range(questions):
-            _, index = read_name(response, index)
-            index += 4  # Skip QTYPE and QCLASS
+    def parse_question(self):
+        if self.questions != 1:
+            raise ValueError(f"Invalid DNS response: expected 1 question, got {self.questions}")
+        for _ in range(self.questions):
+            _, self.index = self.read_name(self.index)
+            self.index += 4  # Skip QTYPE and QCLASS
 
-        # Parse the Answer section
-        if answer_rrs > 0:
-            print(f"***Answer Section ({answer_rrs} records)***")
-            for i in range(answer_rrs):
-                # Parse the answer name
-                name, index = read_name(response, index)
-                
-                # Parse the rest of the answer fields
-                answer_type, answer_class, ttl, data_length = struct.unpack(">HHIH", response[index:index + 10])
-                index += 10
+    def parse_record(self):
+        name, self.index = self.read_name(self.index)
+        if self.index + 10 > len(self.response):
+            raise ValueError("Invalid DNS response: incomplete record section")
+        answer_type, answer_class, ttl, data_length = struct.unpack(">HHIH", self.response[self.index:self.index + 10])
+        self.index += 10
+        if self.index + data_length > len(self.response):
+            raise ValueError("Invalid DNS response: incomplete record data")
+        auth = "auth" if (self.flags & 0x0400) else "nonauth"
+        if answer_type == 1:  # Type A
+            ip_address = socket.inet_ntoa(self.response[self.index:self.index + data_length])
+            print(f"IP\t{ip_address}\t{ttl}\t{auth}")
+        elif answer_type == 5:  # Type CNAME
+            cname, _ = self.read_name(self.index)
+            print(f"CNAME\t{cname}\t{ttl}\t{auth}")
+        elif answer_type == 15:  # Type MX
+            preference = struct.unpack(">H", self.response[self.index:self.index + 2])[0]
+            mx, _ = self.read_name(self.index + 2)
+            print(f"MX\t{mx}\t{preference}\t{ttl}\t{auth}")
+        elif answer_type == 2:  # Type NS
+            ns, _ = self.read_name(self.index)
+            print(f"NS\t{ns}\t{ttl}\t{auth}")
+        else:
+            print("  Non-A record type")
+        self.index += data_length
 
-                # Determine if the response is authoritative
-                auth = "auth" if (flags & 0x0400) else "nonauth"
-
-                # If it's an A record (IPv4 address)
-                if answer_type == 1:  # Type A
-                    ip_address = socket.inet_ntoa(response[index:index + data_length])
-                    print(f"IP\t{ip_address}\t{ttl}\t{auth}")
-                elif answer_type == 5:  # Type CNAME
-                    cname, _ = read_name(response, index)
-                    print(f"CNAME\t{cname}\t{ttl}\t{auth}")
-                elif answer_type == 15:  # Type MX
-                    preference = struct.unpack(">H", response[index:index + 2])[0]
-                    mx, _ = read_name(response, index + 2)
-                    print(f"MX\t{mx}\t{preference}\t{ttl}\t{auth}")
-                elif answer_type == 2:  # Type NS
-                    ns, _ = read_name(response, index)
-                    print(f"NS\t{ns}\t{ttl}\t{auth}")
-                else:
-                    print("  Non-A record type")
-                
-                index += data_length
+    def parse_response(self):
+        self.parse_header()
+        self.parse_question()
+        if self.answer_rrs > 0:
+            print(f"***Answer Section ({self.answer_rrs} records)***")
+            for _ in range(self.answer_rrs):
+                self.parse_record()
         else:
             print("NOTFOUND")
+        if self.additional_rrs > 0:
+            print(f"***Additional Section ({self.additional_rrs} records)***")
+            for _ in range(self.additional_rrs):
+                self.parse_record()
 
-        # Parse the Additional section
-        if additional_rrs > 0:
-            print(f"***Additional Section ({additional_rrs} records)***")
-            for i in range(additional_rrs):
-                # Parse the additional record name
-                name, index = read_name(response, index)
-                
-                # Parse the rest of the additional record fields
-                additional_type, additional_class, ttl, data_length = struct.unpack(">HHIH", response[index:index + 10])
-                index += 10
+    def output_error(self, rcode):
+        errors = {
+            1: "ERROR    Format Error: the name server was unable to interpret the query.",
+            2: "ERROR    Server Failure: the name server was unable to process this query due to failure with the name server.",
+            3: "NOTFOUND",
+            4: "ERROR    Not Implemented: the name server does not support that kind of query.",
+            5: "ERROR    Refused: The server refused to answer for the query."
+        }
+        print(errors.get(rcode, "ERROR    Unknown error"))
+        exit(0)
 
-                # Determine if the response is authoritative
-                auth = "auth" if (flags & 0x0400) else "nonauth"
-
-                # If it's an A record (IPv4 address)
-                if additional_type == 1:  # Type A
-                    ip_address = socket.inet_ntoa(response[index:index + data_length])
-                    print(f"IP\t{ip_address}\t{ttl}\t{auth}")
-                elif additional_type == 5:  # Type CNAME
-                    cname, _ = read_name(response, index)
-                    print(f"CNAME\t{cname}\t{ttl}\t{auth}")
-                elif additional_type == 15:  # Type MX
-                    preference = struct.unpack(">H", response[index:index + 2])[0]
-                    mx, _ = read_name(response, index + 2)
-                    print(f"MX\t{mx}\t{preference}\t{ttl}\t{auth}")
-                elif additional_type == 2:  # Type NS
-                    ns, _ = read_name(response, index)
-                    print(f"NS\t{ns}\t{ttl}\t{auth}")
-                else:
-                    print("  Non-A record type")
-                
-                index += data_length
+def parse_dns_response(response, query_name, server_ip, request_type):
+    try:
+        dns_response = DNSResponse(response, query_name, server_ip, request_type)
+        dns_response.parse_response()
     except Exception as e:
         print(f"ERROR\t{str(e)}")

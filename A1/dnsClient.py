@@ -66,16 +66,20 @@ def send_query():
 
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.settimeout(timeout)
-
+    startTime = time.time_ns()
     retries = 0
     while (retries < max_retries):
         try:
             udp_socket.sendto(query_packet, (server, port))
-            response, _ = udp_socket.recvfrom(1024)
+            response, serverIP = udp_socket.recvfrom(1024)
             if response:
-                parse_dns_response(response, domain_name, server, query_type, time.time(),retries)
-                # print(f"Received response: {response.hex()}")    # For debugging purposes
-                # print(f"Received response no hex: {response}")    # For debugging purposes
+                endTime = time.time_ns()
+                udp_socket.close()
+                print(f'DnsClient sendsing request for {domain_name}')
+                print(f'Server: {serverIP}')
+                print(f'Request type: {query_type}')
+                print(f'Response received after {(endTime - startTime)//1000000000} seconds ({retries} retries)')
+                parse_dns_response(response, domain_name, server, query_type)
                 break
 
         except Exception as e:
