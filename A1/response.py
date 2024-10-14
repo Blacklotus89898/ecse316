@@ -7,14 +7,14 @@ class DNSResponse:
         self.query_name = query_name
         self.server_ip = server_ip
         self.request_type = request_type
-        self.index = 0
+        self.index = 0  # index to keep track of the current position in the response, like a pointer
         self.flags = 0
 
     def read_name(self, offset):
         labels = []
         while True:
             length = self.response[offset]
-            if length & 0xC0 == 0xC0:  # Pointer to another location so compressed
+            if length & 0xC0 == 0xC0:  # Pointer to another location when compressed
                 pointer = struct.unpack(">H", self.response[offset:offset + 2])[0]
                 offset += 2
                 return self.read_name(pointer & 0x3FFF)[0], offset
@@ -31,12 +31,12 @@ class DNSResponse:
             raise ValueError("Invalid DNS response: too short")
         header = self.response[:12]
         (
-            self.transaction_id,
-            self.flags,
-            self.questions,
-            self.answer_rrs,
-            self.authority_rrs,
-            self.additional_rrs
+            self.transaction_id,  # ID
+            self.flags,  # |QR| Opcode |AA|TC|RD|RA| Z | RCODE |
+            self.questions,  # QDCOUNT
+            self.answer_rrs,  # ANCOUNT
+            self.authority_rrs,  # NSCOUNT
+            self.additional_rrs  # ARCOUNT
         ) = struct.unpack(">HHHHHH", header)
         self.index = 12
 
@@ -58,6 +58,8 @@ class DNSResponse:
             raise ValueError("Invalid DNS response: incomplete record section")
         answer_type, answer_class, ttl, data_length = struct.unpack(">HHIH", self.response[self.index:self.index + 10])
         self.index += 10
+        if answer_class != 0x0001:
+            raise ValueError(f"Invalid DNS response: expected CLASS 0x0001, got {answer_class:#04x}")
         if self.index + data_length > len(self.response):
             raise ValueError("Invalid DNS response: incomplete record data")
         auth = "auth" if (self.flags & 0x0400) else "nonauth"

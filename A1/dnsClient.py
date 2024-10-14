@@ -66,19 +66,19 @@ def send_query():
 
     udp_socket = socket.socket(socket.AF_INET, socket.SOCK_DGRAM)
     udp_socket.settimeout(timeout)
-    startTime = time.time_ns()
     retries = 0
     while (retries < max_retries):
         try:
             udp_socket.sendto(query_packet, (server, port))
+            startTime = time.time_ns()
             response, serverIP = udp_socket.recvfrom(1024)
             if response:
                 endTime = time.time_ns()
                 udp_socket.close()
-                print(f'DnsClient sendsing request for {domain_name}')
+                print(f'DnsClient sending request for {domain_name}')
                 print(f'Server: {serverIP}')
                 print(f'Request type: {query_type}')
-                print(f'Response received after {(endTime - startTime)//1000000000} seconds ({retries} retries)')
+                print(f'Response received after {(endTime - startTime)/1000000000} seconds ({retries} retries)')
                 parse_dns_response(response, domain_name, server, query_type)
                 break
 
@@ -86,7 +86,9 @@ def send_query():
             print(f"Error occurred: {e}")
             retries += 1
 
-
+    if retries == max_retries:
+        print(f"ERROR: Maximum retries reached ({retries})")
+    udp_socket.close()
 
 
 def main():

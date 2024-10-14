@@ -1,5 +1,10 @@
 # ecse316
+Running the local dns server:
 
-- [ ] Code completion: oct 5th
-- [ ] Report: Oct 6th
-- [ ] Due date: Oct 12th 
+```python dsnServer.py```
+
+Querying from the local dns server with refused error: 
+
+```python dnsClient.py  -p 8080 "@127.0.0.1" refused.query```
+
+
