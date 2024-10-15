@@ -7,4 +7,4 @@ Querying from the local dns server with refused error:
 
 ```python dnsClient.py  -p 8080 "@127.0.0.1" refused.query```
 
-
+Python version used: 3.9.6+
