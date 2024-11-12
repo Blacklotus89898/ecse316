@@ -71,13 +71,95 @@ def test_DFT2D():
             print("Our implementation: ", our_X)
             print("NumPy implementation: ", NumPy_X)
 
+# Test function for the FFT against the NumPy implementation
+def test_FFT():
+    test_cases = [
+        [1, 2, 3, 4],
+        [1 + 2j, 2 + 3j, 3 + 4j, 4 + 5j],
+        [np.sin(2 * np.pi * 0.1 * i) for i in range(16)]
+    ]
+
+    for i in test_cases:
+        our_X = our_implementations.FFT(i)
+        NumPy_X = np.fft.fft(i)
+
+        print("\nTesting FFT on: ", i)
+        if np.allclose(our_X, NumPy_X, rtol=1e-15):
+            print("\033[32mTest passed\033[0m")
+        else:
+            print("\033[31mTest failed\033[0m")
+            print("Our implementation: ", our_X)
+            print("NumPy implementation: ", NumPy_X)
+
+def test_IFFT():
+    test_cases = [
+        [1, 2, 3, 4],
+        [1 + 2j, 2 + 3j, 3 + 4j, 4 + 5j],
+        [np.sin(2 * np.pi * 0.1 * i) for i in range(16)]
+    ]
+
+    for i in test_cases:
+        our_x = our_implementations.IFFT(i)
+        NumPy_x = np.fft.ifft(i)
+
+        print("\nTesting IFFT on: ", i)
+        if np.allclose(our_x, NumPy_x, rtol=1e-15):
+            print("\033[32mTest passed\033[0m")
+        else:
+            print("\033[31mTest failed\033[0m")
+            print("Our implementation: ", our_x)
+            print("NumPy implementation: ", NumPy_x)
+
+def test_FFT2D():
+    test_cases = [
+        [[1, 2, 3, 4], [5, 6, 7, 8]],
+        [[1 + 2j, 2 + 3j, 3 + 4j, 4 + 5j], [6 + 7j, 7 + 8j, 8 + 9j, 9 + 10j]],
+        [[np.sin(2 * np.pi * 0.1 * i) for i in range(10)], [np.sin(2 * np.pi * 0.25 * i) for i in range(10)]],
+    ]
+
+    for i in test_cases:
+        our_X = our_implementations.FFT2D(i)
+        NumPy_X = np.fft.fft2(i)
+
+        print("\nTesting FFT2D on: ", i)
+        if np.allclose(our_X, NumPy_X, rtol=1e-8):
+            print("\033[32mTest passed\033[0m")
+        else:
+            print("\033[31mTest failed\033[0m")
+            print("Our implementation: ", our_X)
+            print("NumPy implementation: ", NumPy_X)
+
+def test_IFFT2D():
+    test_cases = [
+        [[1, 2, 3, 4], [5, 6, 7, 8]],
+        [[1 + 2j, 2 + 3j, 3 + 4j, 4 + 5j], [6 + 7j, 7 + 8j, 8 + 9j, 9 + 10j]],
+        [[np.sin(2 * np.pi * 0.001 * i) for i in range(10)], [np.sin(2 * np.pi * 0.015 * i) for i in range(10)]],
+    ]
+
+    for i in test_cases:
+        our_x = our_implementations.IFFT2D(i)
+        NumPy_x = np.fft.ifft2(i)
+
+        print("\nTesting IFFT2D on: ", i)
+        if np.allclose(our_x, NumPy_x, rtol=1e-8):
+            print("\033[32mTest passed\033[0m")
+        else:
+            print("\033[31mTest failed\033[0m")
+            print("Our implementation: ", our_x)
+            print("NumPy implementation: ", NumPy_x)
+
 
 def main():
-    #test_command_call() 
-    test_DFT()
-    test_IDFT()
-    test_DFT2D()
+    # test_command_call() 
+    # test_DFT()
+    # test_IDFT()
+    # test_DFT2D()
 
+    # FFT tests ##############################################################
+    test_FFT()
+    test_IFFT()
+    test_FFT2D()
+    test_IFFT2D()
 
 if __name__ == "__main__":
     main()

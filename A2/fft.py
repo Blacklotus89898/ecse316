@@ -123,6 +123,202 @@ def DFT2D(signal):
     return F
 
 
+# def FFT(signal):
+#     """
+#     A recursive implementation of the 1D Cooley-Tukey FFT.
+#     The input should have a length that is a power of 2.
+#     """
+#     # Convert the input signal to a numpy array of complex numbers
+#     x = np.asarray(signal, dtype=complex)
+#     N = x.shape[0]
+
+#     # Pad the array with zeros if the length is not a power of 2
+#     if not np.log2(N).is_integer():
+#         next_pow2 = int(np.power(2, np.ceil(np.log2(N))))
+#         x = np.pad(x, (0, next_pow2 - N), mode='constant')
+#         N = x.shape[0]
+
+#     # Base case: if the input contains only one element, return it
+#     if N <= 1:
+#         return x
+
+#     # Recursive case: split the array into even and odd parts
+#     even = FFT(x[0::2])
+#     odd = FFT(x[1::2])
+
+#     # Compute the twiddle factors
+#     T = np.exp(-2j * np.pi * np.arange(N) / N)[:N // 2]
+
+#     # Combine the results of the even and odd parts
+#     result = np.concatenate([even + T * odd, even - T * odd])
+
+#     return result
+def FFT(signal, normalize=True):
+    """
+    A recursive implementation of the 1D Cooley-Tukey FFT.
+    The input should have a length that is a power of 2.
+    """
+    # Convert the input signal to a numpy array of complex numbers
+    x = np.asarray(signal, dtype=complex)
+    N = x.shape[0]
+
+    # Pad the array with zeros if the length is not a power of 2
+    if not np.log2(N).is_integer():
+        next_pow2 = int(np.power(2, np.ceil(np.log2(N))))
+        x = np.pad(x, (0, next_pow2 - N), mode='constant')
+        N = x.shape[0]
+
+    # Base case: if the input contains only one element, return it
+    if N <= 1:
+        return x
+
+    # Recursive case: split the array into even and odd parts
+    even = FFT(x[0::2], normalize=False)
+    odd = FFT(x[1::2], normalize=False)
+
+    # Compute the twiddle factors
+    T = np.exp(-2j * np.pi * np.arange(N) / N)[:N // 2]
+
+    # Combine the results of the even and odd parts
+    result = np.concatenate([even + T * odd, even - T * odd])
+
+    # # Apply normalization if needed
+    # if normalize:
+    #     result /= N
+
+    return result
+
+def IFFT(signal):
+    """
+    A recursive implementation of the 1D Cooley-Tukey IFFT.
+    The input should have a length that is a power of 2.
+    """
+    # Helper function to perform the IFFT
+    def _IFFT(x):
+        N = x.shape[0]
+
+        # Base case: if the input contains only one element, return it
+        if N <= 1:
+            return x
+
+        # Recursive case: split the array into even and odd parts
+        even = _IFFT(x[0::2])
+        odd = _IFFT(x[1::2])
+
+        # Compute the twiddle factors with a positive sign in the exponent
+        T = np.exp(2j * np.pi * np.arange(N) / N)[:N // 2]
+
+        # Combine the results of the even and odd parts
+        result = np.concatenate([even + T * odd, even - T * odd])
+
+        return result
+
+    x = np.asarray(signal, dtype=complex)
+    N = x.shape[0]
+
+    # Pad the array with zeros if the length is not a power of 2
+    if not np.log2(N).is_integer():
+        next_pow2 = int(np.power(2, np.ceil(np.log2(N))))
+        x = np.pad(x, (0, next_pow2 - N), mode='constant')
+        N = x.shape[0]
+
+    # Perform the IFFT using the helper function
+    result = _IFFT(x)
+
+    # Scale the result by the inverse of the length
+    return result / N
+
+
+# def FFT2D(signal):
+#     """
+#     A recursive implementation of the 2D Cooley-Tukey FFT.
+#     The input should have dimensions that are powers of 2.
+#     """
+#     # Convert the input signal to a numpy array of complex numbers
+#     f = np.asarray(signal, dtype=complex)
+#     om, on = f.shape
+#     N, M = f.shape
+
+#     # Pad the array with zeros if the dimensions are not powers of 2
+#     if not (np.log2(N).is_integer() and np.log2(M).is_integer()):
+#         next_pow2_N = int(np.power(2, np.ceil(np.log2(N))))
+#         next_pow2_M = int(np.power(2, np.ceil(np.log2(M))))
+#         f = np.pad(f, ((0, next_pow2_N - N), (0, next_pow2_M - M)), mode='constant')
+#         N, M = f.shape
+
+#     # Perform the 1D FFT on the rows
+#     F = np.array([FFT(row) for row in f])
+
+#     # Perform the 1D FFT on the columns
+#     F = np.array([FFT(col) for col in F.T]).T
+
+#     # Remove the padding if it was added
+#     F = F[:om, :on]
+
+#     return F
+
+
+def FFT2D(signal):
+    """
+    A 2D FFT implementation using the 1D FFT function.
+    """
+    signal = np.asarray(signal, dtype=complex)
+    original_shape = signal.shape
+    N, M = signal.shape
+
+    # Pad the array with zeros if the dimensions are not powers of 2
+    if not np.log2(N).is_integer():
+        next_pow2_N = int(np.power(2, np.ceil(np.log2(N))))
+        signal = np.pad(signal, ((0, next_pow2_N - N), (0, 0)), mode='constant')
+        N = signal.shape[0]
+    if not np.log2(M).is_integer():
+        next_pow2_M = int(np.power(2, np.ceil(np.log2(M))))
+        signal = np.pad(signal, ((0, 0), (0, next_pow2_M - M)), mode='constant')
+        M = signal.shape[1]
+
+    # Apply FFT to each row
+    F = np.zeros((N, M), dtype=complex)
+    
+    for i in range(N):
+        F[i, :] = FFT(signal[i, :])
+
+    # Apply FFT to each column
+    for j in range(M):
+        F[:, j] = FFT(F[:, j])
+
+    # Remove the padding if it was added
+    F = F[:original_shape[0], :original_shape[1]]
+
+    return F
+
+def IFFT2D(signal):
+    """
+    A recursive implementation of the 2D Cooley-Tukey IFFT.
+    The input should have dimensions that are powers of 2.
+    """
+
+    # Convert the input signal to a numpy array of complex numbers
+    F = np.asarray(signal, dtype=complex)
+    om, on = F.shape
+    N, M = F.shape
+
+    # Pad the array with zeros if the dimensions are not powers of 2
+    if not (np.log2(N).is_integer() and np.log2(M).is_integer()):
+        next_pow2_N = int(np.power(2, np.ceil(np.log2(N))))
+        next_pow2_M = int(np.power(2, np.ceil(np.log2(M))))
+        F = np.pad(F, ((0, next_pow2_N - N), (0, next_pow2_M - M)), mode='constant')
+        N, M = F.shape
+
+    # Perform the 1D IFFT on the rows
+    F = np.array([IFFT(row) for row in F])
+
+    # Perform the 1D IFFT on the columns
+    F = np.array([IFFT(col) for col in F.T]).T
+
+    # Scale the result by the inverse of the dimensions
+    return F[:om, :on]
+          
+
 
 def fast_mode(image):
     pass
