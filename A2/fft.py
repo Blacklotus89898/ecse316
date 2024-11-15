@@ -186,38 +186,38 @@ def FFT(signal):
     # Remove the padding before returning the result
     return result[:original_N]
 
-#The Cooley-Tukey FFT
-def fft(signal):
-    N = len(signal)
+# #The Cooley-Tukey FFT
+# def fft(signal):
+#     N = len(signal)
 
-    if N <= 1:
-        return signal
+#     if N <= 1:
+#         return signal
 
-    even = fft(signal[0::2])
-    odd = fft(signal[1::2])
+#     even = fft(signal[0::2])
+#     odd = fft(signal[1::2])
 
-    t = np.exp(-2j * np.pi * np.arange(N) / N)
-    return np.concatenate([even + t[:N//2] * odd, even + t[N//2:] * odd])
+#     t = np.exp(-2j * np.pi * np.arange(N) / N)
+#     return np.concatenate([even + t[:N//2] * odd, even + t[N//2:] * odd])
 
-def fft_2D(matrix: np.ndarray):
-    assert type(matrix) is np.ndarray
+# def fft_2D(matrix: np.ndarray):
+#     assert type(matrix) is np.ndarray
 
-    res1 = np.zeros(matrix.shape, dtype='complex_')
+#     res1 = np.zeros(matrix.shape, dtype='complex_')
 
-    for i, row in enumerate(matrix):
-        # if DEBUG:
-        #     if i % 100 == 0:
-        #         print(i)
-        res1[i] = fft(row)
+#     for i, row in enumerate(matrix):
+#         # if DEBUG:
+#         #     if i % 100 == 0:
+#         #         print(i)
+#         res1[i] = fft(row)
 
-    res2 = np.zeros(matrix.T.shape, dtype='complex_')
-    for i, col in enumerate(res1.T):
-        # if DEBUG:
-        #     if i % 100 == 0:
-        #         print(i)
-        res2[i] = fft(col)
+#     res2 = np.zeros(matrix.T.shape, dtype='complex_')
+#     for i, col in enumerate(res1.T):
+#         # if DEBUG:
+#         #     if i % 100 == 0:
+#         #         print(i)
+#         res2[i] = fft(col)
 
-    return res2.T
+#     return res2.T
 
 def IFFT(signal):
     """
@@ -350,21 +350,137 @@ def IFFT2D(signal):
 
     # Scale the result by the inverse of the dimensions
     return F[:om, :on]
-          
+
+# def dft(signal):
+#     signal = np.asarray(signal, dtype=complex) # Put input as array with complex type
+#     N = signal.shape[0]   # Return number of rows in array
+
+#     # Instantiate array of zeros of length rows with complex type
+#     result = np.zeros(N, dtype=complex)
+
+#     for k in range(N):
+#         for n in range(N):
+#             # DFT formula
+#             result[k] += signal[n] * np.exp(-2j * np.pi * k * n / N)
+
+#     return result
+
+# def inverse_dft(X):
+#     X = np.asarray(X, dtype=complex)
+#     N = X.shape[0]
+#     inverse = np.zeros(N, dtype=complex)
+
+#     for n in range(N):
+#         for k in range(N):
+#             inverse[n] += X[k] * np.exp(2j * np.pi * k * n / N)
+
+#         inverse[n] = inverse[n] / N
+
+#     return inverse
+
+# def dft_2d(signal):
+#     signal = np.asarray(signal, dtype=complex)
+
+#     # Store both dimensions of the array
+#     N = signal.shape[0]
+#     M = signal.shape[1]
+
+#     # Instantate arrays of 0s with same dimensions 
+#     row = np.zeros((N, M), dtype=complex) 
+#     result = np.zeros((M, N), dtype=complex) 
+    
+#     # Compute the dft of input and store it in row
+#     for n in range(N):
+#         row[n] = dft(signal[n])
+
+#     column = row.transpose()
+
+#     # Compute dft of transposed array
+#     for m in range(M):
+#         result[m] = dft(column[m])
+
+#     return result.transpose()
+
+# def fft(signal):
+#     threshold = 16
+#     signal = np.asarray(signal, dtype=complex)
+#     N = signal.shape[0]
+
+#     if N > threshold:
+#         even = fft(signal[::2])
+#         odd = fft(signal[1::2])
+#         result = np.zeros(N, dtype=complex)
+#         for n in range(N):
+#             result[n] = even[n % (N // 2)] + np.exp(-2j * np.pi * n / N) * odd[n % (N // 2)]
+#         return result
+#     else:
+#         return dft(signal)
+
+# def inverse_fft(signal):
+#     threshold = 16
+#     signal = np.asarray(signal, dtype=complex)
+#     N = signal.shape[0]
+
+#     if N > threshold:
+#         even = inverse_fft(signal[::2])
+#         odd = inverse_fft(signal[1::2])
+#         result = np.zeros(N, dtype=complex)
+#         for n in range(N):
+#             result[n] = (N // 2) * even[n % (N // 2)] + np.exp(2j * np.pi * n / N) * (N // 2) * odd[n % (N // 2)]
+#             result[n] = result[n] / N
+
+#         return result
+#     else:
+#         return inverse_dft(signal)
+
+# def fft_2d(signal):
+#     signal = np.asarray(signal, dtype=complex)
+#     width, height = signal.shape
+#     result = np.zeros((width, height), dtype=complex)
+
+#     for i in range(height):
+#         result[:, i] = fft(signal[:, i])
+#     for i in range(width):
+#         result[i, :] = fft(result[i, :])
+
+#     return result
+
+# def inverse_fft_2d(signal):
+#     signal = np.asarray(signal, dtype=complex)
+#     width, height = signal.shape
+#     result = np.zeros((width, height), dtype=complex)
+
+#     for i in range(width):
+#         result[i, :] = inverse_fft(signal[i, :])
+#     for i in range(height):
+#         result[:, i] = inverse_fft(result[:, i])
+
+#     return result
+
+# padding the image to maintain the dimensions as a power of 2
+def pad_image(image):
+    """
+    Pads the input image to the next power of 2 dimensions.
+    """
+    new_shape = [int(np.power(2, np.ceil(np.log2(dim)))) for dim in image.shape]
+    padded_image = np.zeros(new_shape, dtype=image.dtype)
+    padded_image[:image.shape[0], :image.shape[1]] = image
+
+    return padded_image
 
 def fast_mode(image):
     # Read the image using OpenCV
     image_array = cv.imread(image, cv.IMREAD_UNCHANGED)
-    print(image_array.shape)
 
     # Convert to grayscale if the image has multiple channels
     if len(image_array.shape) == 3:
         image_array = cv.cvtColor(image_array, cv.COLOR_BGR2GRAY)
+    
     # Convert the image to a numpy array of floats
     image_array = np.asarray(image_array, dtype=complex)
-    # transformed_image = FFT2D(image_array)
-    transformed_image = FFT2D(image_array)
-    # tt = IFFT2D(transformed_image)
+    
+    # Perform the 2D FFT on the padded image
+    transformed_image = FFT2D(pad_image(image_array))
     
     # Plot the original and transformed images side by side using matplotlib
     fig, axes = plt.subplots(1, 2, figsize=(12, 6))
@@ -372,35 +488,26 @@ def fast_mode(image):
     # Original image
     axes[0].imshow(np.abs(image_array), cmap='gray')
     axes[0].set_title('Original Image')
-    axes[0].axis('off')
     
     # Transformed image
     axes[1].imshow(np.abs(transformed_image), cmap='gray', norm=colors.LogNorm())
     axes[1].set_title('2D FFT of the Image')
-    axes[1].axis('off')
     
     plt.show()
 
 def denoise_mode(image):
     # Read the image using OpenCV
-    image_array = cv.imread(image, cv.IMREAD_UNCHANGED)
+    image_array = cv.imread(image, cv.IMREAD_GRAYSCALE)
 
-    # Convert to grayscale if the image has multiple channels
-    if len(image_array.shape) == 3:
-        image_array = cv.cvtColor(image_array, cv.COLOR_BGR2GRAY)
-
-    # Convert the image to a numpy array of floats
-    image_array = np.asarray(image_array, dtype=complex)
-
-    # Perform the 2D FFT
-    transformed_image = FFT2D(image_array)
+    # Perform the 2D FFT on the padded image
+    transformed_image = FFT2D(pad_image(image_array))
 
     # Zero out high frequency components based on a threshold
-    threshold = np.max(np.abs(transformed_image)) * np.pi  # Adjust this value to control the amount of denoising
+    threshold = np.max(np.abs(transformed_image)) * 0.16
     transformed_image[np.abs(transformed_image) > threshold] = 0
 
-    # # Perform the 2D IFFT
-    # denoised_image = IFFT2D(transformed_image)
+    # Perform the 2D IFFT
+    denoised_image = IFFT2D(transformed_image).real
 
     # Plot the original and denoised images side by side using matplotlib
     fig, axes = plt.subplots(1, 2, figsize=(12, 6))
@@ -408,18 +515,40 @@ def denoise_mode(image):
     # Original image
     axes[0].imshow(np.abs(image_array), cmap='gray')
     axes[0].set_title('Original Image')
-    axes[0].axis('off')
 
     # Denoised image
-    axes[1].imshow(np.abs(transformed_image), cmap='gray', norm=colors.LogNorm())   
+    axes[1].imshow(np.abs(denoised_image[:image_array.shape[0], :image_array.shape[1]]), cmap='gray')
     axes[1].set_title('Denoised Image')
-    axes[1].axis('off')
 
     plt.show()
 
 def compress_mode(image):
-    pass
+    image_array = cv.imread(image, cv.IMREAD_GRAYSCALE)
 
+    # Perform the 2D FFT on the padded image
+    transformed_image = FFT2D(pad_image(image_array))
+
+    # Filter the transformed image by keeping only the top and bottom values
+    magnitude = np.abs(transformed_image)
+    threshold = np.percentile(magnitude, 99.9)  # Keep top 5% values
+    filtered_image = np.where(magnitude < threshold, transformed_image, 0)
+
+    # Perform the 2D IFFT on the filtered image
+    compressed_image = IFFT2D(filtered_image).real
+
+    # Plot the original and compressed images side by side using matplotlib
+    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+
+    # Original image
+    axes[0].imshow(np.abs(image_array), cmap='gray')
+    axes[0].set_title('Original Image')
+
+    # Compressed image
+    axes[1].imshow(np.abs(compressed_image[:image_array.shape[0], :image_array.shape[1]]), cmap='gray')
+    axes[1].set_title('Compressed Image')
+
+    plt.show()
+  
 def plot_runtime_mode(image):
     pass
 
