@@ -21,18 +21,20 @@ pip install -r requirements.txt
 
 ## Command Line Arguments
 
-* -m mode (optional):
+-m mode (optional):
 -   1: Fast mode: Convert image to FFT form and display. The default value.
 -   2: Denoise: The image is denoised by applying an FFT, truncating high frequencies and then displayed
 -   3: Compress: Compress image and plot.
 -   4: Plot runtime graphs for the report.
 
-* -i image (optional): 
+-i image (optional): 
 -   Filename of the image for the DFT. The default value is moonlanding.jpg, which is the image that was provided to us.
 
 
 Please run the following command to run our program:
 
-``` ```
+``` 
+python ./fft.py [-m mode#] [-i image_path]
+```
 
 

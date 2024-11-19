@@ -1,7 +1,7 @@
 import argparse
+import time
 import cv2 as cv
 import numpy as np
-import plotly as ply
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
@@ -40,19 +40,26 @@ Let:
 (Vector handling inpired by NumPy's API: https://numpy.org/doc/stable/reference/routines.array-creation.html)
 '''
 def DFT(signal):
-    # Upon receiving a signal, we must make sure it is a numpy array
+    # Upon receiving a signal, Make sure it is a numpy array
     x = np.asarray(signal)  # If the signal is already a numpy array, this will not change anything 
 
-    # Then, we set the number of samples taken from the signal
+    # Set the number of samples taken from the signal
     N = len(x)
 
-    # We initialize the DFT vector X[k] to contain all zeros but that can handle complex numbers 
+    # Initialize n as the discrete time index and k as the frequency index
+    n = np.arange(N)    # n = [0, 1, ..., N-1]
+    k = n.reshape((N, 1))   # k = [0, 1, ..., N-1] as a column vector
+
+    # Can precompute the exponential term to avoid recalculating it in the loop
+    e = np.exp(-2j * np.pi * k * n / N)
+
+    # Initialize the DFT vector X[k] to contain all zeros but that can handle complex numbers 
     X = np.zeros(N, dtype=complex)
 
-    # We can now calculate the DFT of the signal by performing the summation 
+    # Calculate the DFT of the signal by performing the summation 
     for k in range(N):
         for n in range(N):
-            X[k] += x[n] * np.exp(-2j * np.pi * k * n / N) 
+            X[k] += x[n] * e[k, n]
 
     return X
 
@@ -69,19 +76,26 @@ Let:
 (Vector handling inpired by NumPy's API: https://numpy.org/doc/stable/reference/routines.array-creation.html)
 '''
 def IDFT(signal):
-    # Upon receiving a signal, we must make sure it is a numpy array
+    # Upon receiving a signal, Make sure it is a numpy array
     X = np.asarray(signal)  # If the signal is already a numpy array, this will not change anything 
 
-    # Then, we set the number of samples taken from the signal
+    # Set the number of samples taken from the signal
     N = len(X)
 
-    # We initialize the IDFT vector x[n] to contain all zeros but that can handle complex numbers 
-    x = np.zeros(N, dtype=complex)
+    # Initialize n as the discrete time index and k as the frequency index
+    n = np.arange(N)    # n = [0, 1, ..., N-1]
+    k = n.reshape((N, 1))   # k = [0, 1, ..., N-1] as a column vector
 
-    # We can now calculate the IDFT of the signal by performing the summation 
+    # Can precompute the exponential term to avoid recalculating it in the loop
+    e = np.exp(2j * np.pi * k * n / N)
+
+    # Initialize the IDFT vector x[n] to contain all zeros but that can handle complex numbers 
+    x = np.zeros(N, dtype=complex)
+    
+    # Calculate the IDFT of the signal by performing the summation 
     for n in range(N):
         for k in range(N):
-            x[n] += X[k] * np.exp(2j * np.pi * k * n / N) 
+            x[n] += X[k] * e[k, n]
 
     # We must scale the IDFT vector by 1/N after the summation
     x = (1/N) * x
@@ -105,56 +119,51 @@ Let:
 (2D DFT understanding pulled from: https://www.corsi.univr.it/documenti/OccorrenzaIns/matdid/matdid027832.pdf)
 '''
 def DFT2D(signal):
-    # Upon receiving a 2D signal, we must make sure it is a numpy tuple of vectors
+    # Upon receiving a 2D signal, make sure it is a numpy tuple of vectors
     f = np.asarray(signal)  # If the signal is already a tuple of vectors, this will not change anything
 
-    # Then, we set the number of samples taken from the signal
+    # Set the number of samples taken from the signal
     N = f.shape[0]  # Number of rows
     M = f.shape[1]  # Number of columns
 
-    # We initialize the DFT matrix F[k, l] to contain all zeros but that can handle complex numbers 
-    F = np.zeros((N, M), dtype=complex)
+    # Initialize n as the discrete time index in the y-axis and m as the discrete time index in the x-axis
+    n = np.matrix(np.arange(N)).T   # n = [0, 1, ..., N-1] as a column vector
+    m = np.matrix(np.arange(M)).T   # m = [0, 1, ..., M-1] as a column vector
 
-    # We can now calculate the 2D DFT of the image by performing the summation 
-    for k in range(N): 
-        for l in range(M):  
-            for m in range(N): 
-                for n in range(M):  
-                    F[k, l] += f[m, n] * np.exp(-2j * np.pi * k * m / N) * np.exp(-2j * np.pi * l * n / M)
+    # Initialize k and l as the frequency indices in the x-axis and y-axis
+    k = np.matrix(np.arange(M))   # k = [0, 1, ..., M-1] as a row vector
+    l = np.matrix(np.arange(N))   # l = [0, 1, ..., N-1] as a row vector
+    
+    # Define the exponential terms for the x-axis and y-axis
+    e_l = np.exp(-2j * np.pi * (np.matmul(n, l)) / N)   # For the y-axis, i.e., the columns
+    e_k = np.exp(-2j * np.pi * (np.matmul(m, k)) / M)   # For the x-axis, i.e., the rows
+
+    # Initialize the DFT matrix F[k, l] to contain all zeros but that can handle complex numbers 
+    F = np.zeros((M, N), dtype=complex)
+
+    ''' For debugging purposes
+    print("Calculating the 2D DFT...")
+    print("f: ", f.shape)
+    print("e_l: ", e_l.shape)
+    print("e_k: ", e_k.shape)
+    print("k: ", k.shape)
+    print("l: ", l.shape)
+    print("m: ", m.shape)
+    print("n: ", n.shape)
+    print("M: ", M)
+    print("N: ", N)
+    '''
+       
+    # Calculate the 2D DFT of the signal by performing the summation
+    for k in range(N):
+        for l in range(M):
+            F[k, l] = np.sum((f * e_k[:, l]).T * e_l[:, k])
 
     return F
 
 
-# def FFT(signal):
-#     """
-#     A recursive implementation of the 1D Cooley-Tukey FFT.
-#     The input should have a length that is a power of 2.
-#     """
-#     # Convert the input signal to a numpy array of complex numbers
-#     x = np.asarray(signal, dtype=complex)
-#     N = x.shape[0]
 
-#     # Pad the array with zeros if the length is not a power of 2
-#     if not np.log2(N).is_integer():
-#         next_pow2 = int(np.power(2, np.ceil(np.log2(N))))
-#         x = np.pad(x, (0, next_pow2 - N), mode='constant')
-#         N = x.shape[0]
 
-#     # Base case: if the input contains only one element, return it
-#     if N <= 1:
-#         return x
-
-#     # Recursive case: split the array into even and odd parts
-#     even = FFT(x[0::2])
-#     odd = FFT(x[1::2])
-
-#     # Compute the twiddle factors
-#     T = np.exp(-2j * np.pi * np.arange(N) / N)[:N // 2]
-
-#     # Combine the results of the even and odd parts
-#     result = np.concatenate([even + T * odd, even - T * odd])
-
-#     return result
 def FFT(signal):
     """
     A recursive implementation of the 1D Cooley-Tukey FFT.
@@ -186,38 +195,6 @@ def FFT(signal):
     # Remove the padding before returning the result
     return result[:original_N]
 
-# #The Cooley-Tukey FFT
-# def fft(signal):
-#     N = len(signal)
-
-#     if N <= 1:
-#         return signal
-
-#     even = fft(signal[0::2])
-#     odd = fft(signal[1::2])
-
-#     t = np.exp(-2j * np.pi * np.arange(N) / N)
-#     return np.concatenate([even + t[:N//2] * odd, even + t[N//2:] * odd])
-
-# def fft_2D(matrix: np.ndarray):
-#     assert type(matrix) is np.ndarray
-
-#     res1 = np.zeros(matrix.shape, dtype='complex_')
-
-#     for i, row in enumerate(matrix):
-#         # if DEBUG:
-#         #     if i % 100 == 0:
-#         #         print(i)
-#         res1[i] = fft(row)
-
-#     res2 = np.zeros(matrix.T.shape, dtype='complex_')
-#     for i, col in enumerate(res1.T):
-#         # if DEBUG:
-#         #     if i % 100 == 0:
-#         #         print(i)
-#         res2[i] = fft(col)
-
-#     return res2.T
 
 def IFFT(signal):
     """
@@ -259,34 +236,6 @@ def IFFT(signal):
     # Scale the result by the inverse of the length
     return result / N
 
-
-# def FFT2D(signal):
-#     """
-#     A recursive implementation of the 2D Cooley-Tukey FFT.
-#     The input should have dimensions that are powers of 2.
-#     """
-#     # Convert the input signal to a numpy array of complex numbers
-#     f = np.asarray(signal, dtype=complex)
-#     om, on = f.shape
-#     N, M = f.shape
-
-#     # Pad the array with zeros if the dimensions are not powers of 2
-#     if not (np.log2(N).is_integer() and np.log2(M).is_integer()):
-#         next_pow2_N = int(np.power(2, np.ceil(np.log2(N))))
-#         next_pow2_M = int(np.power(2, np.ceil(np.log2(M))))
-#         f = np.pad(f, ((0, next_pow2_N - N), (0, next_pow2_M - M)), mode='constant')
-#         N, M = f.shape
-
-#     # Perform the 1D FFT on the rows
-#     F = np.array([FFT(row) for row in f])
-
-#     # Perform the 1D FFT on the columns
-#     F = np.array([FFT(col) for col in F.T]).T
-
-#     # Remove the padding if it was added
-#     F = F[:om, :on]
-
-#     return F
 
 
 def FFT2D(signal):
@@ -351,111 +300,6 @@ def IFFT2D(signal):
     # Scale the result by the inverse of the dimensions
     return F[:om, :on]
 
-# def dft(signal):
-#     signal = np.asarray(signal, dtype=complex) # Put input as array with complex type
-#     N = signal.shape[0]   # Return number of rows in array
-
-#     # Instantiate array of zeros of length rows with complex type
-#     result = np.zeros(N, dtype=complex)
-
-#     for k in range(N):
-#         for n in range(N):
-#             # DFT formula
-#             result[k] += signal[n] * np.exp(-2j * np.pi * k * n / N)
-
-#     return result
-
-# def inverse_dft(X):
-#     X = np.asarray(X, dtype=complex)
-#     N = X.shape[0]
-#     inverse = np.zeros(N, dtype=complex)
-
-#     for n in range(N):
-#         for k in range(N):
-#             inverse[n] += X[k] * np.exp(2j * np.pi * k * n / N)
-
-#         inverse[n] = inverse[n] / N
-
-#     return inverse
-
-# def dft_2d(signal):
-#     signal = np.asarray(signal, dtype=complex)
-
-#     # Store both dimensions of the array
-#     N = signal.shape[0]
-#     M = signal.shape[1]
-
-#     # Instantate arrays of 0s with same dimensions 
-#     row = np.zeros((N, M), dtype=complex) 
-#     result = np.zeros((M, N), dtype=complex) 
-    
-#     # Compute the dft of input and store it in row
-#     for n in range(N):
-#         row[n] = dft(signal[n])
-
-#     column = row.transpose()
-
-#     # Compute dft of transposed array
-#     for m in range(M):
-#         result[m] = dft(column[m])
-
-#     return result.transpose()
-
-# def fft(signal):
-#     threshold = 16
-#     signal = np.asarray(signal, dtype=complex)
-#     N = signal.shape[0]
-
-#     if N > threshold:
-#         even = fft(signal[::2])
-#         odd = fft(signal[1::2])
-#         result = np.zeros(N, dtype=complex)
-#         for n in range(N):
-#             result[n] = even[n % (N // 2)] + np.exp(-2j * np.pi * n / N) * odd[n % (N // 2)]
-#         return result
-#     else:
-#         return dft(signal)
-
-# def inverse_fft(signal):
-#     threshold = 16
-#     signal = np.asarray(signal, dtype=complex)
-#     N = signal.shape[0]
-
-#     if N > threshold:
-#         even = inverse_fft(signal[::2])
-#         odd = inverse_fft(signal[1::2])
-#         result = np.zeros(N, dtype=complex)
-#         for n in range(N):
-#             result[n] = (N // 2) * even[n % (N // 2)] + np.exp(2j * np.pi * n / N) * (N // 2) * odd[n % (N // 2)]
-#             result[n] = result[n] / N
-
-#         return result
-#     else:
-#         return inverse_dft(signal)
-
-# def fft_2d(signal):
-#     signal = np.asarray(signal, dtype=complex)
-#     width, height = signal.shape
-#     result = np.zeros((width, height), dtype=complex)
-
-#     for i in range(height):
-#         result[:, i] = fft(signal[:, i])
-#     for i in range(width):
-#         result[i, :] = fft(result[i, :])
-
-#     return result
-
-# def inverse_fft_2d(signal):
-#     signal = np.asarray(signal, dtype=complex)
-#     width, height = signal.shape
-#     result = np.zeros((width, height), dtype=complex)
-
-#     for i in range(width):
-#         result[i, :] = inverse_fft(signal[i, :])
-#     for i in range(height):
-#         result[:, i] = inverse_fft(result[:, i])
-
-#     return result
 
 # padding the image to maintain the dimensions as a power of 2
 def pad_image(image):
@@ -468,6 +312,9 @@ def pad_image(image):
 
     return padded_image
 
+'''
+Mode 1: Convert image to FFT and plot
+'''
 def fast_mode(image):
     # Read the image using OpenCV
     image_array = cv.imread(image, cv.IMREAD_UNCHANGED)
@@ -495,6 +342,10 @@ def fast_mode(image):
     
     plt.show()
 
+
+'''
+Mode 2: Denoise image (FFT) and plot the image with truncated high frequencies
+'''
 def denoise_mode(image):
     # Read the image using OpenCV
     image_array = cv.imread(image, cv.IMREAD_GRAYSCALE)
@@ -522,6 +373,10 @@ def denoise_mode(image):
 
     plt.show()
 
+
+'''
+Mode 3: Compress image and plot
+'''
 def compress_mode(image):
     image_array = cv.imread(image, cv.IMREAD_GRAYSCALE)
 
@@ -548,15 +403,96 @@ def compress_mode(image):
     axes[1].set_title('Compressed Image')
 
     plt.show()
-  
-def plot_runtime_mode(image):
-    pass
 
 
 
+'''
+Mode 4: Plot runtime graphs for DTF abd FFT
+'''
+def plot_runtime_mode():
+    # Determine the number of trials to run
+    num_trials = 10
 
+    # Determine the range of sizes for the 2D arrays
+    sizes = [2**i for i in range(5, 10)]
 
+    # Lists to store the data for plotting
+    x = []
+    y_dtf = []
+    y_fft = []
+    std_dev_dft = []
+    std_dev_fft = []
 
+    # Measure the runtime for each size
+    for size in sizes:
+        print(f"===============Running for size {size}...")
+
+        # Generate a random 2D array of the specified size
+        signal = np.random.random((size, size)) # Will use floating point numbers (continuous) between 0 and 1 in a uniform distribution
+
+        # Store the runtime for DFT and FFT at each trial
+        dft_runtimes = []
+        fft_runtimes = []
+
+        # Must run 10 times for the average runtime
+        for iter in range(num_trials):
+            print(f"- Running trial {iter + 1}...")
+
+            # Measure the runtime for DFT
+            dft_start_time = time.time()
+            DFT2D(signal)
+            dft_end_time = time.time()
+            dft_runtimes.append(dft_end_time - dft_start_time)
+
+            # Measure the runtime for FFT
+            fft_start_time = time.time()
+            FFT2D(signal)
+            fft_end_time = time.time()
+            fft_runtimes.append(fft_end_time - fft_start_time)
+
+        # Calculate the average runtime for DFT and FFT
+        mean_dft_runtime = np.mean(dft_runtimes)
+        mean_fft_runtime = np.mean(fft_runtimes)
+        x.append(size)
+        y_dtf.append(mean_dft_runtime)
+        y_fft.append(mean_fft_runtime)
+
+        # Calculate the standard deviation for the runtimes with a confidence interval of 97%
+        std_dev_dft_runtime = np.std(dft_runtimes)
+        std_dev_fft_runtime = np.std(fft_runtimes)
+        std_dev_dft.append(2 * std_dev_dft_runtime)
+        std_dev_fft.append(2 * std_dev_fft_runtime)
+
+        # Print the average runtime for DFT and FFT
+        print(f"Average runtime for DFT: {mean_dft_runtime}")
+        print(f"Average runtime for FFT: {mean_fft_runtime}")
+
+        # Print the variance for the runtimes 
+        print(f"Variance for DFT: {np.var(dft_runtimes)}")
+        print(f"Variance for FFT: {np.var(fft_runtimes)}")
+
+        # Print the standard deviation for the runtimes
+        print(f"Standard deviation for DFT with a 97% confidence interval: {2 * std_dev_dft_runtime}")
+        print(f"Standard deviation for FFT with a 97% confidence interval: {2 * std_dev_fft_runtime}") 
+
+        print(f"Done running size {size}================")
+        
+    print("Now plotting...")
+
+    # Set the plot labels
+    plt.title('Runtime Comparison of 2D DFT and 2D FFT')
+    plt.xlabel('Size of 2D Array')
+    plt.ylabel('Runtime (s)')
+
+    # Plot the runtime graph for DFT and FFT
+    plt.xscale('log')
+    plt.yscale('log')
+    plt.errorbar(x, y_dtf, yerr=std_dev_dft, capsize=5, label="DFT", color='blue')
+    plt.errorbar(x, y_fft, yerr=std_dev_fft, capsize=5,label="FFT", color='red')
+
+    # Display the plot
+    plt.legend()
+    plt.show()
 
 
 
@@ -572,7 +508,7 @@ def main():
     elif mode == 3:
         compress_mode(image)
     elif mode == 4:
-        plot_runtime_mode(image)
+        plot_runtime_mode()
 
 
 

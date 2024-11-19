@@ -220,15 +220,15 @@ def fast_mode_test(image):
 
 def main():
     # test_command_call() 
-    # test_DFT()
-    # test_IDFT()
-    # test_DFT2D()
+    test_DFT()
+    test_IDFT()
+    test_DFT2D()
 
     # FFT tests ##############################################################
-    test_FFT()
-    test_IFFT()
-    test_FFT2D()
-    test_IFFT2D()
+    #test_FFT()
+    #test_IFFT()
+    #test_FFT2D()
+    #test_IFFT2D()
     # test_fft()
     # test_fft2D()
 
