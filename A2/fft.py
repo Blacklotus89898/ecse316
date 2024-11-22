@@ -380,30 +380,35 @@ Mode 3: Compress image and plot
 def compress_mode(image):
     image_array = cv.imread(image, cv.IMREAD_GRAYSCALE)
 
-    # Perform the 2D FFT on the padded image
-    transformed_image = FFT2D(pad_image(image_array))
-
-    # Filter the transformed image by keeping only the top and bottom values
-    magnitude = np.abs(transformed_image)
-    threshold = np.percentile(magnitude, 99.9)  # Keep top 5% values
-    filtered_image = np.where(magnitude < threshold, transformed_image, 0)
-
-    # Perform the 2D IFFT on the filtered image
-    compressed_image = IFFT2D(filtered_image).real
-
+    percentiles = [20, 99, 99.9, 99.99, 100]
+    
     # Plot the original and compressed images side by side using matplotlib
-    fig, axes = plt.subplots(1, 2, figsize=(12, 6))
+    _, axes = plt.subplots(2, 3, figsize=(18, 12))
 
     # Original image
-    axes[0].imshow(np.abs(image_array), cmap='gray')
-    axes[0].set_title('Original Image')
+    axes[0, 0].imshow(np.abs(image_array), cmap='gray')
+    axes[0, 0].set_title('Original Image')
 
-    # Compressed image
-    axes[1].imshow(np.abs(compressed_image[:image_array.shape[0], :image_array.shape[1]]), cmap='gray')
-    axes[1].set_title('Compressed Image')
+    for i, percentile in enumerate(percentiles):
+        # Perform the 2D FFT on the padded image
+        transformed_image = FFT2D(pad_image(image_array))
+        magnitude = np.abs(transformed_image)
+        lower_threshold = np.percentile(magnitude, percentile)
+        upper_threshold = np.percentile(magnitude, 100 - percentile)
+        filtered_image = np.where((magnitude < lower_threshold) & (magnitude > upper_threshold), transformed_image, 0)
+        # filtered_image = np.where( (magnitude > upper_threshold), transformed_image, 0)
+        # filtered_image = np.where((magnitude < lower_threshold) , transformed_image, 0)
+
+        # Perform the 2D IFFT on the filtered image
+        compressed_image = IFFT2D(filtered_image).real
+
+        # Plot the compressed image
+        row, col = divmod(i + 1, 3)
+        print("sdfghjksdfghskdlfg")
+        axes[row, col].imshow(np.abs(compressed_image[:image_array.shape[0], :image_array.shape[1]]), cmap='gray')
+        axes[row, col].set_title(f'Compressed Image at {percentile}th percentile')
 
     plt.show()
-
 
 
 '''
