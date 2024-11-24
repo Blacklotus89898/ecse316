@@ -6,12 +6,18 @@ import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
 
+# Helper function to view an image through a window
+# (inspired by: https://opencv.org/get-started/)
+def open_image(image):
+    img = cv.imread(image)
+    cv.imshow(image, img)
+    cv.waitKey(0)   # Must press any key to close the image window
+
 # Test function to view the command call arguments
 def test_command_call():
     mode, image = our_implementations.parse_command_call()
     print("Mode: ", mode)
-    our_implementations.open_image(image)
-
+    open_image(image)
 
 # Test function for the DFT against the NumPy implementation
 def test_DFT():

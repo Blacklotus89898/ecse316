@@ -18,14 +18,6 @@ def parse_command_call():
     return args.mode, args.image
 
 
-# Helper function to view an image through a window
-# (inspired by: https://opencv.org/get-started/)
-def open_image(image):
-    img = cv.imread(image)
-    cv.imshow(image, img)
-    cv.waitKey(0)   # Must press any key to close the image window
-
-
 '''
 Helper function to perform the (naïve approach) Discrete Fourier Transform (DFT) on a signal.
 Using the formula provided in the assignment description: X_k = Σ_{n=0}^{N-1} x_n * e^(-i2πkn/N) for k = 0, 1, ..., N-1
@@ -40,26 +32,19 @@ Let:
 (Vector handling inpired by NumPy's API: https://numpy.org/doc/stable/reference/routines.array-creation.html)
 '''
 def DFT(signal):
-    # Upon receiving a signal, Make sure it is a numpy array
+    # Upon receiving a signal, we must make sure it is a numpy array
     x = np.asarray(signal)  # If the signal is already a numpy array, this will not change anything 
 
-    # Set the number of samples taken from the signal
+    # Then, we set the number of samples taken from the signal
     N = len(x)
 
-    # Initialize n as the discrete time index and k as the frequency index
-    n = np.arange(N)    # n = [0, 1, ..., N-1]
-    k = n.reshape((N, 1))   # k = [0, 1, ..., N-1] as a column vector
-
-    # Can precompute the exponential term to avoid recalculating it in the loop
-    e = np.exp(-2j * np.pi * k * n / N)
-
-    # Initialize the DFT vector X[k] to contain all zeros but that can handle complex numbers 
+    # We initialize the DFT vector X[k] to contain all zeros but that can handle complex numbers 
     X = np.zeros(N, dtype=complex)
 
-    # Calculate the DFT of the signal by performing the summation 
+    # We can now calculate the DFT of the signal by performing the summation 
     for k in range(N):
         for n in range(N):
-            X[k] += x[n] * e[k, n]
+            X[k] += x[n] * np.exp(-2j * np.pi * k * n / N) 
 
     return X
 
@@ -73,29 +58,23 @@ Let:
    - X_k be the signal at frequency k --> Implemented as a vector X[k]
    - k be the frequency index
    - n be the discrete time index
+   
 (Vector handling inpired by NumPy's API: https://numpy.org/doc/stable/reference/routines.array-creation.html)
 '''
 def IDFT(signal):
-    # Upon receiving a signal, Make sure it is a numpy array
+    # Upon receiving a signal, we must make sure it is a numpy array
     X = np.asarray(signal)  # If the signal is already a numpy array, this will not change anything 
 
-    # Set the number of samples taken from the signal
+    # Then, we set the number of samples taken from the signal
     N = len(X)
 
-    # Initialize n as the discrete time index and k as the frequency index
-    n = np.arange(N)    # n = [0, 1, ..., N-1]
-    k = n.reshape((N, 1))   # k = [0, 1, ..., N-1] as a column vector
-
-    # Can precompute the exponential term to avoid recalculating it in the loop
-    e = np.exp(2j * np.pi * k * n / N)
-
-    # Initialize the IDFT vector x[n] to contain all zeros but that can handle complex numbers 
+    # We initialize the IDFT vector x[n] to contain all zeros but that can handle complex numbers 
     x = np.zeros(N, dtype=complex)
-    
-    # Calculate the IDFT of the signal by performing the summation 
+
+    # We can now calculate the IDFT of the signal by performing the summation 
     for n in range(N):
         for k in range(N):
-            x[n] += X[k] * e[k, n]
+            x[n] += X[k] * np.exp(2j * np.pi * k * n / N) 
 
     # We must scale the IDFT vector by 1/N after the summation
     x = (1/N) * x
@@ -113,8 +92,8 @@ Let:
    - M be the number of samples taken from the signal in the y-axis --> Number of columns
    - k be the frequency index in the x-axis
    - l be the frequency index in the y-axis
-   - n be the discrete time index in the y-axis
-   - m be the discrete time index in the x-axis
+   - n be the spatial index in the y-axis
+   - m be the spatial index in the x-axis
 
 (2D DFT understanding pulled from: https://www.corsi.univr.it/documenti/OccorrenzaIns/matdid/matdid027832.pdf)
 '''
@@ -126,7 +105,7 @@ def DFT2D(signal):
     N = f.shape[0]  # Number of rows
     M = f.shape[1]  # Number of columns
 
-    # Initialize n as the discrete time index in the y-axis and m as the discrete time index in the x-axis
+    # Initialize n as the spatial indices in the y-axis and m as the spatial indices in the x-axis
     n = np.matrix(np.arange(N)).T   # n = [0, 1, ..., N-1] as a column vector
     m = np.matrix(np.arange(M)).T   # m = [0, 1, ..., M-1] as a column vector
 
@@ -141,7 +120,7 @@ def DFT2D(signal):
     # Initialize the DFT matrix F[k, l] to contain all zeros but that can handle complex numbers 
     F = np.zeros((M, N), dtype=complex)
 
-    ''' For debugging purposes
+    # For debugging purposes
     print("Calculating the 2D DFT...")
     print("f: ", f.shape)
     print("e_l: ", e_l.shape)
@@ -152,7 +131,7 @@ def DFT2D(signal):
     print("n: ", n.shape)
     print("M: ", M)
     print("N: ", N)
-    '''
+    
        
     # Calculate the 2D DFT of the signal by performing the summation
     for k in range(N):
@@ -495,10 +474,13 @@ def plot_runtime_mode():
     plt.show()
 
 
-
-# (Opening the image inspired by: https://opencv.org/get-started/)
 def main():
     mode, image = parse_command_call()
+
+    # Validate the image path
+    if not cv.haveImageReader(image):
+        print("Invalid image path. Please provide a valid image path.")
+        return
 
     # Choose the appropriate functionality based on the mode
     if mode == 1:
@@ -509,8 +491,8 @@ def main():
         compress_mode(image)
     elif mode == 4:
         plot_runtime_mode()
-
-
+    else:
+        print("Invalid mode. Please choose a mode from 1 to 4.")
 
 
 if __name__ == "__main__":
