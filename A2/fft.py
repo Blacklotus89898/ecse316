@@ -1,8 +1,6 @@
 import argparse
 import cv2 as cv
 import numpy as np
-import plotly as ply
-
 
 # Helper function to manage the arguments included in the command line call
 # (inspired by https://docs.python.org/3/library/argparse.html)
@@ -114,11 +112,11 @@ def DFT2D(signal):
     F = np.zeros((N, M), dtype=complex)
 
     # We can now calculate the 2D DFT of the image by performing the summation 
-    for k in range(N): 
-        for l in range(M):  
-            for m in range(N): 
-                for n in range(M):  
-                    F[k, l] += f[m, n] * np.exp(-2j * np.pi * k * m / N) * np.exp(-2j * np.pi * l * n / M)
+    for l in range(N): 
+        for k in range(M):  
+            for m in range(M): 
+                for n in range(N):  
+                    F[l, k] += f[n, m] * np.exp(-2j * np.pi * k * m / M) * np.exp(-2j * np.pi * l * n / N)
 
     return F
 
