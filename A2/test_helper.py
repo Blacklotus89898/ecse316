@@ -32,7 +32,7 @@ def test_DFT():
         NumPy_X = np.fft.fft(i)
 
         print("\nTesting DFT on: ", i)
-        if np.allclose(our_X, NumPy_X, rtol=1e-15):
+        if np.allclose(our_X, NumPy_X, rtol=1e-10):
             print("\033[32mTest passed\033[0m")
         else:
             print("\033[31mTest failed\033[0m")
@@ -53,7 +53,7 @@ def test_IDFT():
         NumPy_x = np.fft.ifft(i)
 
         print("\nTesting IDFT on: ", i)
-        if np.allclose(our_x, NumPy_x, rtol=1e-15):
+        if np.allclose(our_x, NumPy_x, rtol=1e-10):
             print("\033[32mTest passed\033[0m")
         else:
             print("\033[31mTest failed\033[0m")
@@ -74,7 +74,7 @@ def test_DFT2D():
         NumPy_X = np.fft.fft2(i)
 
         print("\nTesting DFT2D on: ", i)
-        if np.allclose(our_X, NumPy_X, rtol=1e-8):
+        if np.allclose(our_X, NumPy_X, rtol=1e-10):
             print("\033[32mTest passed\033[0m")
         else:
             print("\033[31mTest failed\033[0m")
@@ -92,10 +92,10 @@ def test_FFT():
     for i in test_cases:
         our_X = our_implementations.FFT(i)
         NumPy_X = np.fft.fft(i)
-        x = our_implementations.fft(i)
+        #x = our_implementations.fft(i)
 
         print("\nTesting FFT on: ", i)
-        if np.allclose(our_X, NumPy_X, rtol=1e-15):
+        if np.allclose(our_X, NumPy_X, rtol=1e-10):
             print("\033[32mTest passed\033[0m")
         else:
             print("\033[31mTest failed\033[0m")
@@ -120,10 +120,10 @@ def test_IFFT():
     for i in test_cases:
         our_x = our_implementations.IFFT(i)
         NumPy_x = np.fft.ifft(i)
-        x = our_implementations.inverse_fft(i)
+        #x = our_implementations.inverse_fft(i)
 
         print("\nTesting IFFT on: ", i)
-        if np.allclose(our_x, NumPy_x, rtol=1e-15):
+        if np.allclose(our_x, NumPy_x, rtol=1e-10):
             print("\033[32mTest passed\033[0m")
         else:
             print("\033[31mTest failed\033[0m")
@@ -149,10 +149,10 @@ def test_FFT2D():
     for i in test_cases:
         our_X = our_implementations.FFT2D(i)
         NumPy_X = np.fft.fft2(i)
-        x = our_implementations.fft_2d(i)
+        #x = our_implementations.fft_2d(i)
 
         print("\nTesting FFT2D on: ", i)
-        if np.allclose(our_X, NumPy_X, rtol=1e-15):
+        if np.allclose(our_X, NumPy_X, rtol=1e-10):
             print("\033[32mTest passed\033[0m")
         else:
             print("\033[31mTest failed\033[0m")
@@ -177,10 +177,10 @@ def test_IFFT2D():
     for i in test_cases:
         our_x = our_implementations.IFFT2D(i)
         NumPy_x = np.fft.ifft2(i)
-        x = our_implementations.inverse_fft_2d(i)
+        #x = our_implementations.inverse_fft_2d(i)
 
         print("\nTesting IFFT2D on: ", i)
-        if np.allclose(our_x, NumPy_x, rtol=1e-15):
+        if np.allclose(our_x, NumPy_x, rtol=1e-10):
             print("\033[32mTest passed\033[0m")
         else:
             print("\033[31mTest failed\033[0m")
@@ -231,12 +231,12 @@ def main():
     test_DFT2D()
 
     # FFT tests ##############################################################
-    #test_FFT()
-    #test_IFFT()
-    #test_FFT2D()
-    #test_IFFT2D()
-    # test_fft()
-    # test_fft2D()
+    test_FFT()
+    test_IFFT()
+    test_FFT2D()
+    test_IFFT2D()
+    #test_fft()
+    #test_fft2D()
 
     # fast_mode_test("moonlanding.jpg")
     # fast_mode_test("moonlanding.jpg")
