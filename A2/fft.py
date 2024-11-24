@@ -87,17 +87,6 @@ def IDFT(signal):
 
 '''
 Helper function to perform the (naïve approach) 2D Discrete Fourier Transform (DFT).
-Using the formula provided in the assignment description: F_kl = Σ_{n=0}^{N-1} (Σ_{m=0}^{M-1} f_mn * e^(-2πikm/M)) * e^(-2πikn/N)) for k = 0, 1, ..., M-1 and l = 0, 1, ..., N-1
-Let:
-   - F_kl be the 2D DFT of the signal at frequency (k, l) --> Implemented as a matrix F[k, l]
-   - f_mn be the signal at discrete time m and n --> Implemented as a matrix f[m, n]
-   - N be the number of samples taken from the signal in the x-axis --> Number of rows
-   - M be the number of samples taken from the signal in the y-axis --> Number of columns
-   - k be the frequency index in the x-axis
-   - l be the frequency index in the y-axis
-   - n be the discrete time index in the y-axis
-   - m be the discrete time index in the x-axis
-
 (2D DFT understanding pulled from: https://www.corsi.univr.it/documenti/OccorrenzaIns/matdid/matdid027832.pdf)
 '''
 def DFT2D(signal):
@@ -108,7 +97,7 @@ def DFT2D(signal):
     N = f.shape[0]  # Number of rows
     M = f.shape[1]  # Number of columns
 
-    # We initialize the DFT matrix F[k, l] to contain all zeros but that can handle complex numbers 
+    # We initialize the DFT matrix F[l, k] to contain all zeros but that can handle complex numbers 
     F = np.zeros((N, M), dtype=complex)
 
     # We can now calculate the 2D DFT of the image by performing the summation 
