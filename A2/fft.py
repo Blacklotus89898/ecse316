@@ -337,7 +337,7 @@ def fast_mode(image):
     axes[0].set_title('Original Image')
     
     # Transformed image
-    axes[1].imshow(np.abs(transformed_image), cmap='gray', norm=colors.LogNorm())
+    axes[1].imshow(np.abs(transformed_image[:image_array.shape[0], :image_array.shape[1]]), cmap='gray', norm=colors.LogNorm())
     axes[1].set_title('2D FFT of the Image')
     
     plt.show()
@@ -352,11 +352,21 @@ def denoise_mode(image):
 
     # Perform the 2D FFT on the padded image
     transformed_image = FFT2D(pad_image(image_array))
-
     # Zero out high frequency components based on a threshold
-    threshold = np.max(np.abs(transformed_image)) * 0.16
-    transformed_image[np.abs(transformed_image) > threshold] = 0
+    
+    non_zeros = np.count_nonzero(transformed_image)
+    print("Original non-zero count: ", non_zeros)  
+    
+    # Calculate the magnitude of the transformed image
+    magnitude = np.abs(transformed_image)
+    
+    # Determine the threshold for middle frequencies
+    range = 0.1
+    max = np.max(magnitude)
 
+    # Zero out components within the middle frequency range
+    transformed_image[(magnitude > max*range) & (magnitude < max*(1-range) )] = 0
+    
     # Perform the 2D IFFT
     denoised_image = IFFT2D(transformed_image).real
 
@@ -371,6 +381,11 @@ def denoise_mode(image):
     axes[1].imshow(np.abs(denoised_image[:image_array.shape[0], :image_array.shape[1]]), cmap='gray')
     axes[1].set_title('Denoised Image')
 
+    # Calculate the non-zero count of the denoised image
+    filtered_non_zeros = np.count_nonzero(np.abs(transformed_image[:image_array.shape[0], :image_array.shape[1]]))
+    print("Denoised non-zero count: ", filtered_non_zeros)
+    print("Compression ratio: ", filtered_non_zeros / non_zeros)
+    
     plt.show()
 
 
@@ -378,37 +393,63 @@ def denoise_mode(image):
 Mode 3: Compress image and plot
 '''
 def compress_mode(image):
+    """
+    Compress an image by retaining only the top and bottom percentiles of FFT coefficients,
+    then reconstruct and display the compressed images.
+    """
+    # Load the image in grayscale
     image_array = cv.imread(image, cv.IMREAD_GRAYSCALE)
-
-    percentiles = [20, 99, 99.9, 99.99, 100]
+    if image_array is None:
+        print("Error: Image not found or invalid image path.")
+        return
     
-    # Plot the original and compressed images side by side using matplotlib
+    # Percentiles to test
+    percentiles = [0, 20, 48, 80, 99.9]  # Percentiles for top and bottom retention
+    
+    # Set up matplotlib subplots
     _, axes = plt.subplots(2, 3, figsize=(18, 12))
-
+    
     # Original image
-    axes[0, 0].imshow(np.abs(image_array), cmap='gray')
+    axes[0, 0].imshow(image_array, cmap='gray')
     axes[0, 0].set_title('Original Image')
-
+    
+    # Pad image for FFT
+    padded_image = pad_image(image_array)
+    original_shape = image_array.shape  # Store the original dimensions
+    
     for i, percentile in enumerate(percentiles):
-        # Perform the 2D FFT on the padded image
-        transformed_image = FFT2D(pad_image(image_array))
+        # Perform the 2D FFT
+        transformed_image = FFT2D(padded_image)
+        
+        # Get the magnitude of FFT coefficients
         magnitude = np.abs(transformed_image)
-        lower_threshold = np.percentile(magnitude, percentile)
-        upper_threshold = np.percentile(magnitude, 100 - percentile)
-        filtered_image = np.where((magnitude < lower_threshold) & (magnitude > upper_threshold), transformed_image, 0)
-        # filtered_image = np.where( (magnitude > upper_threshold), transformed_image, 0)
-        # filtered_image = np.where((magnitude < lower_threshold) , transformed_image, 0)
+        
+        # Calculate the top and bottom percentile thresholds
+        low_cutoff = np.percentile(magnitude, 100 - percentile)  # Bottom percentile
+        high_cutoff = np.percentile(magnitude, percentile)       # Top percentile
+        
+        # Create a mask to retain only the top and bottom percentile coefficients
+        mask = (magnitude >= high_cutoff) | (magnitude <= low_cutoff)
+        transformed_image[~mask] = 0  # Zero out all coefficients not in the mask
+        
+        # Perform the 2D IFFT
+        compressed_image = IFFT2D(transformed_image).real
 
-        # Perform the 2D IFFT on the filtered image
-        compressed_image = IFFT2D(filtered_image).real
-
+        # Crop to the original size
+        compressed_image = compressed_image[:original_shape[0], :original_shape[1]]
+        
+        # Count non-zero elements in the compressed image
+        compressed_non_zeros = np.count_nonzero(np.abs(transformed_image))
+        print(f'Compressed non-zero count at {percentile}th percentile:', compressed_non_zeros)
+        
         # Plot the compressed image
         row, col = divmod(i + 1, 3)
-        print("sdfghjksdfghskdlfg")
-        axes[row, col].imshow(np.abs(compressed_image[:image_array.shape[0], :image_array.shape[1]]), cmap='gray')
-        axes[row, col].set_title(f'Compressed Image at {percentile}th percentile')
-
+        axes[row, col].imshow(np.abs(compressed_image), cmap='gray')
+        axes[row, col].set_title(f'Compressed Image at {percentile}th Percentile')
+    
+    # Adjust layout and show plots
     plt.show()
+
 
 
 '''
