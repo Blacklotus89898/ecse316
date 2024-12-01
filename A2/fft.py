@@ -392,62 +392,63 @@ def denoise_mode(image):
 '''
 Mode 3: Compress image and plot
 '''
-def compress_mode(image):
+def compress_mode(image_path):
     """
-    Compress an image by retaining only the top and bottom percentiles of FFT coefficients,
-    then reconstruct and display the compressed images.
+    Compress an image using FFT by thresholding Fourier coefficients,
+    and visualize the results at different compression levels.
     """
     # Load the image in grayscale
-    image_array = cv.imread(image, cv.IMREAD_GRAYSCALE)
-    if image_array is None:
-        print("Error: Image not found or invalid image path.")
+    image = cv.imread(image_path, cv.IMREAD_GRAYSCALE)
+    if image is None:
+        print("Error: Image not found or invalid path.")
         return
     
-    # Percentiles to test
-    percentiles = [0, 20, 48, 80, 99.9]  # Percentiles for top and bottom retention
+    # Compression levels (percent of coefficients to retain)
+    compression_levels = [0, 20, 40, 60, 80, 99.9]
     
-    # Set up matplotlib subplots
+    # Set up subplots
     _, axes = plt.subplots(2, 3, figsize=(18, 12))
     
-    # Original image
-    axes[0, 0].imshow(image_array, cmap='gray')
-    axes[0, 0].set_title('Original Image')
+    # Display the original image in the first subplot
+    axes[0, 0].imshow(image, cmap='gray')
+    axes[0, 0].set_title("Original Image (0% Compression)")
     
-    # Pad image for FFT
-    padded_image = pad_image(image_array)
-    original_shape = image_array.shape  # Store the original dimensions
+    # Pad the image and perform FFT
+    padded_image = pad_image(image)
+    fft_transformed = FFT2D(padded_image)
+    magnitude = np.abs(fft_transformed)
+    original_non_zeros = np.count_nonzero(fft_transformed)
+    print(f"Original non-zero coefficients: {original_non_zeros}")
     
-    for i, percentile in enumerate(percentiles):
-        # Perform the 2D FFT
-        transformed_image = FFT2D(padded_image)
+    # Store original dimensions for cropping after inverse FFT
+    original_shape = image.shape
+    
+    for i, level in enumerate(compression_levels):
+        if level == 0:
+            # Skip the original image; already displayed
+            continue
         
-        # Get the magnitude of FFT coefficients
-        magnitude = np.abs(transformed_image)
+        # Calculate thresholds for compression
+        low_threshold = np.percentile(magnitude, level)  # Retain top 'level' percent of coefficients
         
-        # Calculate the top and bottom percentile thresholds
-        low_cutoff = np.percentile(magnitude, 100 - percentile)  # Bottom percentile
-        high_cutoff = np.percentile(magnitude, percentile)       # Top percentile
+        # Create a mask to retain only the largest coefficients
+        compressed_fft = fft_transformed.copy()
+        compressed_fft[magnitude < low_threshold] = 0  # Zero out smaller coefficients
         
-        # Create a mask to retain only the top and bottom percentile coefficients
-        mask = (magnitude >= high_cutoff) | (magnitude <= low_cutoff)
-        transformed_image[~mask] = 0  # Zero out all coefficients not in the mask
+        # Count non-zero coefficients after compression
+        non_zero_count = np.count_nonzero(compressed_fft)
+        print(f"Non-zero coefficients at {level}% compression: {non_zero_count}")
         
-        # Perform the 2D IFFT
-        compressed_image = IFFT2D(transformed_image).real
-
-        # Crop to the original size
-        compressed_image = compressed_image[:original_shape[0], :original_shape[1]]
-        
-        # Count non-zero elements in the compressed image
-        compressed_non_zeros = np.count_nonzero(np.abs(transformed_image))
-        print(f'Compressed non-zero count at {percentile}th percentile:', compressed_non_zeros)
+        # Perform inverse FFT to reconstruct the image
+        compressed_image = IFFT2D(compressed_fft).real
+        compressed_image = compressed_image[:original_shape[0], :original_shape[1]]  # Crop back to original size
         
         # Plot the compressed image
-        row, col = divmod(i + 1, 3)
-        axes[row, col].imshow(np.abs(compressed_image), cmap='gray')
-        axes[row, col].set_title(f'Compressed Image at {percentile}th Percentile')
+        row, col = divmod(i, 3)
+        axes[row, col].imshow(compressed_image, cmap='gray')
+        axes[row, col].set_title(f"{level}% Compression")
     
-    # Adjust layout and show plots
+    # Adjust subplot layout and show results
     plt.show()
 
 
