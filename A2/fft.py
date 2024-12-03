@@ -115,18 +115,27 @@ def DFT2D(signal):
 def FFT(signal):
     """
     A recursive implementation of the 1D Cooley-Tukey FFT.
-    The input should have a length that is a power of 2.
+    The input should have a length that is a power of 2. 
+    If not, it will be zero-padded to the next power of 2 internally.
+
+    Parameters:
+        signal (array-like): Input signal, can be real or complex.
+
+    Returns:
+        np.ndarray: The FFT of the input signal, matching the original size.
     """
+    # Convert input to a complex numpy array
     x = np.asarray(signal, dtype=complex)
     original_N = x.shape[0]
     N = x.shape[0]
 
-    # Pad the array with zeros if the length is not a power of 2
-    if not np.log2(N).is_integer():
-        next_pow2 = int(np.power(2, np.ceil(np.log2(N))))
+    # Pad to the next power of 2 if the input length is not a power of 2
+    if N > 0 and not np.log2(N).is_integer():
+        next_pow2 = int(2**np.ceil(np.log2(N)))
         x = np.pad(x, (0, next_pow2 - N), mode='constant')
         N = x.shape[0]
 
+    # Base case: FFT of a single element is the element itself
     if N <= 1:
         return x
 
@@ -135,21 +144,28 @@ def FFT(signal):
     odd = FFT(x[1::2])
 
     # Compute the twiddle factors
-    T = np.exp(-2j * np.pi * np.arange(N) / N)[:N // 2]
+    T = np.exp(-2j * np.pi * np.arange(N // 2) / N)
 
     # Combine the results of the even and odd parts
     result = np.concatenate([even + T * odd, even - T * odd])
 
-    # Remove the padding before returning the result
+    # Remove the padding and return the FFT of the original signal size
     return result[:original_N]
 
 
 def IFFT(signal):
     """
     A recursive implementation of the 1D Cooley-Tukey IFFT.
-    The input should have a length that is a power of 2.
+    The input should have a length that is a power of 2. 
+    If not, it will be zero-padded to the next power of 2 internally.
+
+    Parameters:
+        signal (array-like): Input signal, can be real or complex.
+
+    Returns:
+        np.ndarray: The IFFT of the input signal, matching the original size.
     """
-    # Helper function to perform the IFFT
+    # Helper function for recursive IFFT
     def _IFFT(x):
         N = x.shape[0]
 
@@ -162,19 +178,19 @@ def IFFT(signal):
         odd = _IFFT(x[1::2])
 
         # Compute the twiddle factors with a positive sign in the exponent
-        T = np.exp(2j * np.pi * np.arange(N) / N)[:N // 2]
+        T = np.exp(2j * np.pi * np.arange(N // 2) / N)
 
         # Combine the results of the even and odd parts
-        result = np.concatenate([even + T * odd, even - T * odd])
+        return np.concatenate([even + T * odd, even - T * odd])
 
-        return result
-
+    # Convert input to a complex numpy array
     x = np.asarray(signal, dtype=complex)
+    original_N = x.shape[0]
     N = x.shape[0]
 
     # Pad the array with zeros if the length is not a power of 2
     if not np.log2(N).is_integer():
-        next_pow2 = int(np.power(2, np.ceil(np.log2(N))))
+        next_pow2 = int(2**np.ceil(np.log2(N)))
         x = np.pad(x, (0, next_pow2 - N), mode='constant')
         N = x.shape[0]
 
@@ -182,7 +198,10 @@ def IFFT(signal):
     result = _IFFT(x)
 
     # Scale the result by the inverse of the length
-    return result / N
+    result = result / N
+
+    # Return the result, matching the original input size
+    return result[:original_N]
 
 
 
@@ -195,26 +214,24 @@ def FFT2D(signal):
     N, M = signal.shape[:2]
 
     # Pad the array with zeros if the dimensions are not powers of 2
+    pad_width = [(0, 0)] * signal.ndim
     if not np.log2(N).is_integer():
         next_pow2_N = int(np.power(2, np.ceil(np.log2(N))))
-        pad_width = ((0, next_pow2_N - N), (0, 0)) + ((0, 0),) * (signal.ndim - 2)
-        signal = np.pad(signal, pad_width, mode='constant')
-        N = signal.shape[0]
+        pad_width[0] = (0, next_pow2_N - N)
     if not np.log2(M).is_integer():
         next_pow2_M = int(np.power(2, np.ceil(np.log2(M))))
-        pad_width = ((0, 0), (0, next_pow2_M - M)) + ((0, 0),) * (signal.ndim - 2)
-        signal = np.pad(signal, pad_width, mode='constant')
-        M = signal.shape[1]
+        pad_width[1] = (0, next_pow2_M - M)
+    signal = np.pad(signal, pad_width, mode='constant')
+    N, M = signal.shape[:2]
 
-    # Apply FFT to each row
-    F = np.zeros(signal.shape, dtype=complex)
-    for i in range(N):
-        F[i, :] = FFT(signal[i, :])
+    F = np.array([np.array(dimension, dtype=complex) for dimension in signal])
+    # Perform the 1D IFFT on the rows
+    F = np.array([FFT(row) for row in F])
 
-    # Apply FFT to each column
-    for j in range(M):
-        F[:, j] = FFT(F[:, j])
+    # Perform the 1D IFFT on the columns
+    F = np.array([FFT(col) for col in F.T]).T
 
+    
     # Remove the padding if it was added
     F = F[:original_shape[0], :original_shape[1]]
 
@@ -228,16 +245,13 @@ def IFFT2D(signal):
 
     # Convert the input signal to a numpy array of complex numbers
     F = np.array([np.array(dimension, dtype=complex) for dimension in signal])
-    # F = np.array(signal, dtype=complex)
-    om, on = F.shape
-    N, M = F.shape
+    M, N = F.shape
 
     # Pad the array with zeros if the dimensions are not powers of 2
     if not (np.log2(N).is_integer() and np.log2(M).is_integer()):
         next_pow2_N = int(np.power(2, np.ceil(np.log2(N))))
         next_pow2_M = int(np.power(2, np.ceil(np.log2(M))))
         F = np.pad(F, ((0, next_pow2_N - N), (0, next_pow2_M - M)), mode='constant')
-        N, M = F.shape
 
     # Perform the 1D IFFT on the rows
     F = np.array([IFFT(row) for row in F])
@@ -246,7 +260,7 @@ def IFFT2D(signal):
     F = np.array([IFFT(col) for col in F.T]).T
 
     # Scale the result by the inverse of the dimensions
-    return F[:om, :on]
+    return F[:M, :N]
 
 
 # padding the image to maintain the dimensions as a power of 2
@@ -275,7 +289,7 @@ def fast_mode(image):
     image_array = np.asarray(image_array, dtype=complex)
     
     # Perform the 2D FFT on the padded image
-    transformed_image = FFT2D(pad_image(image_array))
+    transformed_image = FFT2D((image_array))
     
     # Plot the original and transformed images side by side using matplotlib
     fig, axes = plt.subplots(1, 2, figsize=(12, 6))
@@ -309,7 +323,7 @@ def denoise_mode(image):
     magnitude = np.abs(transformed_image)
     
     # Determine the threshold for middle frequencies
-    range = 0.1
+    range = 0.02
     max = np.max(magnitude)
 
     # Zero out components within the middle frequency range
@@ -352,6 +366,7 @@ def compress_mode(image_path):
         return
     
     # Compression levels (percent of coefficients to retain)
+    # compression_levels = [0, 90, 92, 94, 98, 99.9]
     compression_levels = [0, 20, 40, 60, 80, 99.9]
     
     # Set up subplots

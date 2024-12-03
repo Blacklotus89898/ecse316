@@ -102,13 +102,6 @@ def test_FFT():
             print("Our implementation: ", our_X)
             print("NumPy implementation: ", NumPy_X)
 
-        # if np.array_equal(our_X, x):
-        #     print("\033[32mTest passed\033[0m")
-        # else:
-        #     print("\033[31mTest failed\033[0m")
-        #     print("Our implementation: ", our_X)
-        #     print("Our x: ", x)
-
 
 def test_IFFT():
     test_cases = [
@@ -129,13 +122,6 @@ def test_IFFT():
             print("\033[31mTest failed\033[0m")
             print("Our implementation: ", our_x)
             print("NumPy implementation: ", NumPy_x)
-
-        # if np.array_equal(our_x, x):
-        #     print("\033[32mTest passed\033[0m")
-        # else:
-        #     print("\033[31mTest failed\033[0m")
-        #     print("Our implementation: ", our_x)
-        #     print("Our x: ", x)
         
 
 def test_FFT2D():
@@ -159,13 +145,6 @@ def test_FFT2D():
             print("Our implementation: ", our_X)
             print("NumPy implementation: ", NumPy_X)
 
-        # if np.array_equal(our_X, x):
-        #     print("\033[32mTest passed\033[0m")
-        # else:
-        #     print("\033[31mTest failed\033[0m")
-        #     print("Our implementation: ", our_X)
-        #     print("Our x: ", x)
-
 def test_IFFT2D():
     test_cases = [
         [[1, 2, 3, 4], [5, 6, 7, 8]],
@@ -187,17 +166,10 @@ def test_IFFT2D():
             print("Our implementation: ", our_x)
             print("NumPy implementation: ", NumPy_x)
 
-        # if np.array_equal(our_x, x):
-        #     print("\033[32mTest passed\033[0m")
-        # else:
-        #     print("\033[31mTest failed\033[0m")
-        #     print("Our implementation: ", our_x)
-        #     print("Our x: ", x)
-
 def fast_mode_test(image):
     # Read the image using OpenCV
     image_array = cv.imread("moonlanding.jpg", cv.IMREAD_UNCHANGED)
-    print(image_array.shape)
+    # print(image_array.shape)
 
     # Convert to grayscale if the image has multiple channels
     if len(image_array.shape) == 3:
@@ -205,20 +177,19 @@ def fast_mode_test(image):
     # Convert the image to a numpy array of floats
     image_array = np.asarray(image_array, dtype=complex)
     # transformed_image = FFT2D(image_array)
-    transformed_image = np.fft.fft2(image_array)
-    transformed_image = np.fft.ifft2(transformed_image)
-    # tt = IFFT2D(transformed_image)
+    transformed_image = np.fft.fft2(our_implementations.pad_image(image_array))
+    transformed_image2 = our_implementations.FFT2D(our_implementations.pad_image(image_array))
     
     # Plot the original and transformed images side by side using matplotlib
     fig, axes = plt.subplots(1, 2, figsize=(12, 6))
     
     # Original image
-    axes[0].imshow(np.abs(image_array), cmap='gray')
+    axes[0].imshow(np.abs(transformed_image2[:image_array.shape[0], :image_array.shape[1]]), cmap='gray',norm=colors.LogNorm())
     axes[0].set_title('Original Image')
     axes[0].axis('off')
     
     # Transformed image
-    axes[1].imshow(np.abs(transformed_image), cmap='gray', norm=colors.LogNorm())
+    axes[1].imshow(np.abs(transformed_image[:image_array.shape[0], :image_array.shape[1]]), cmap='gray', norm=colors.LogNorm())
     axes[1].set_title('2D FFT of the Image')
     axes[1].axis('off')
     
@@ -235,11 +206,9 @@ def main():
     test_IFFT()
     test_FFT2D()
     test_IFFT2D()
-    #test_fft()
-    #test_fft2D()
 
-    # fast_mode_test("moonlanding.jpg")
-    # fast_mode_test("moonlanding.jpg")
+    # Test the fast mode
+    fast_mode_test("moonlanding.jpg")
 
 if __name__ == "__main__":
     main()
