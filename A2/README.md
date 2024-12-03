@@ -12,7 +12,7 @@ We incorporated a `requirements.txt` file to install the dependencies that our p
 
 Python version used: 3.9.6+
 
-Please run the following lines before running the program in the terminal. Make sure that you are in the directory of this project: 
+Please run the following line before running the program in the terminal. Make sure that you are in the directory of this project: 
 
 ```
 pip install -r requirements.txt
@@ -31,7 +31,7 @@ pip install -r requirements.txt
 -   Filename of the image for the DFT. The default value is moonlanding.jpg, which is the image that was provided to us.
 
 
-Please run the following command to run our program:
+Please run the following command to run our program in the terminal. Make sure that you are in the directory of this project:
 
 ``` 
 python ./fft.py [-m mode#] [-i image_path]
