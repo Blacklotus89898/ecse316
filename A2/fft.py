@@ -5,9 +5,11 @@ import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.colors as colors
 
+'''
+Helper function to manage the arguments included in the command line call
 
-# Helper function to manage the arguments included in the command line call
-# (inspired by https://docs.python.org/3/library/argparse.html)
+(inspired by https://docs.python.org/3/library/argparse.html)
+'''
 def parse_command_call():
     parser = argparse.ArgumentParser()  
     parser.add_argument("-m", default=1, dest="mode", required=False, type=int)
@@ -109,9 +111,6 @@ def DFT2D(signal):
     return F
 
 
-
-
-
 def FFT(signal):
     """
     A recursive implementation of the 1D Cooley-Tukey FFT.
@@ -185,7 +184,6 @@ def IFFT(signal):
     return result / N
 
 
-
 def FFT2D(signal):
     """
     A 2D FFT implementation using the 1D FFT function.
@@ -220,6 +218,7 @@ def FFT2D(signal):
 
     return F
 
+
 def IFFT2D(signal):
     """
     A recursive implementation of the 2D Cooley-Tukey IFFT.
@@ -249,7 +248,7 @@ def IFFT2D(signal):
     return F[:om, :on]
 
 
-# padding the image to maintain the dimensions as a power of 2
+# Helper function that pads the image to maintain the dimensions as a power of 2
 def pad_image(image):
     """
     Pads the input image to the next power of 2 dimensions.
@@ -259,6 +258,7 @@ def pad_image(image):
     padded_image[:image.shape[0], :image.shape[1]] = image
 
     return padded_image
+
 
 '''
 Mode 1: Convert image to FFT and plot
@@ -398,7 +398,6 @@ def compress_mode(image_path):
     
     # Adjust subplot layout and show results
     plt.show()
-
 
 
 '''
