@@ -13,11 +13,13 @@ def open_image(image):
     cv.imshow(image, img)
     cv.waitKey(0)   # Must press any key to close the image window
 
+
 # Test function to view the command call arguments
 def test_command_call():
     mode, image = our_implementations.parse_command_call()
     print("Mode: ", mode)
     open_image(image)
+
 
 # Test function for the DFT against the NumPy implementation
 def test_DFT():
@@ -81,6 +83,7 @@ def test_DFT2D():
             print("Our implementation: ", our_X)
             print("NumPy implementation: ", NumPy_X)
 
+
 # Test function for the FFT against the NumPy implementation
 def test_FFT():
     test_cases = [
@@ -92,7 +95,6 @@ def test_FFT():
     for i in test_cases:
         our_X = our_implementations.FFT(i)
         NumPy_X = np.fft.fft(i)
-        #x = our_implementations.fft(i)
 
         print("\nTesting FFT on: ", i)
         if np.allclose(our_X, NumPy_X, rtol=1e-10):
@@ -101,13 +103,6 @@ def test_FFT():
             print("\033[31mTest failed\033[0m")
             print("Our implementation: ", our_X)
             print("NumPy implementation: ", NumPy_X)
-
-        # if np.array_equal(our_X, x):
-        #     print("\033[32mTest passed\033[0m")
-        # else:
-        #     print("\033[31mTest failed\033[0m")
-        #     print("Our implementation: ", our_X)
-        #     print("Our x: ", x)
 
 
 def test_IFFT():
@@ -120,7 +115,6 @@ def test_IFFT():
     for i in test_cases:
         our_x = our_implementations.IFFT(i)
         NumPy_x = np.fft.ifft(i)
-        #x = our_implementations.inverse_fft(i)
 
         print("\nTesting IFFT on: ", i)
         if np.allclose(our_x, NumPy_x, rtol=1e-10):
@@ -129,13 +123,6 @@ def test_IFFT():
             print("\033[31mTest failed\033[0m")
             print("Our implementation: ", our_x)
             print("NumPy implementation: ", NumPy_x)
-
-        # if np.array_equal(our_x, x):
-        #     print("\033[32mTest passed\033[0m")
-        # else:
-        #     print("\033[31mTest failed\033[0m")
-        #     print("Our implementation: ", our_x)
-        #     print("Our x: ", x)
         
 
 def test_FFT2D():
@@ -149,7 +136,6 @@ def test_FFT2D():
     for i in test_cases:
         our_X = our_implementations.FFT2D(i)
         NumPy_X = np.fft.fft2(i)
-        #x = our_implementations.fft_2d(i)
 
         print("\nTesting FFT2D on: ", i)
         if np.allclose(our_X, NumPy_X, rtol=1e-10):
@@ -159,12 +145,6 @@ def test_FFT2D():
             print("Our implementation: ", our_X)
             print("NumPy implementation: ", NumPy_X)
 
-        # if np.array_equal(our_X, x):
-        #     print("\033[32mTest passed\033[0m")
-        # else:
-        #     print("\033[31mTest failed\033[0m")
-        #     print("Our implementation: ", our_X)
-        #     print("Our x: ", x)
 
 def test_IFFT2D():
     test_cases = [
@@ -177,7 +157,6 @@ def test_IFFT2D():
     for i in test_cases:
         our_x = our_implementations.IFFT2D(i)
         NumPy_x = np.fft.ifft2(i)
-        #x = our_implementations.inverse_fft_2d(i)
 
         print("\nTesting IFFT2D on: ", i)
         if np.allclose(our_x, NumPy_x, rtol=1e-10):
@@ -187,12 +166,6 @@ def test_IFFT2D():
             print("Our implementation: ", our_x)
             print("NumPy implementation: ", NumPy_x)
 
-        # if np.array_equal(our_x, x):
-        #     print("\033[32mTest passed\033[0m")
-        # else:
-        #     print("\033[31mTest failed\033[0m")
-        #     print("Our implementation: ", our_x)
-        #     print("Our x: ", x)
 
 def fast_mode_test(image):
     # Read the image using OpenCV
@@ -202,8 +175,10 @@ def fast_mode_test(image):
     # Convert to grayscale if the image has multiple channels
     if len(image_array.shape) == 3:
         image_array = cv.cvtColor(image_array, cv.COLOR_BGR2GRAY)
+
     # Convert the image to a numpy array of floats
     image_array = np.asarray(image_array, dtype=complex)
+    
     # transformed_image = FFT2D(image_array)
     transformed_image = np.fft.fft2(image_array)
     transformed_image = np.fft.ifft2(transformed_image)
@@ -224,6 +199,7 @@ def fast_mode_test(image):
     
     plt.show()
 
+
 def main():
     # test_command_call() 
     test_DFT()
@@ -235,11 +211,9 @@ def main():
     test_IFFT()
     test_FFT2D()
     test_IFFT2D()
-    #test_fft()
-    #test_fft2D()
 
-    # fast_mode_test("moonlanding.jpg")
-    # fast_mode_test("moonlanding.jpg")
+    fast_mode_test("moonlanding.jpg")
+
 
 if __name__ == "__main__":
     main()
