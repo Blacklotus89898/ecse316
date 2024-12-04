@@ -1,3 +1,4 @@
+python ./fft.py -m 4 -i /Users/estefania/Desktop/Desktop/yoyi.JPG
 ===============Running for size 32...
 - Running trial 1...
 - Running trial 2...
@@ -9,12 +10,12 @@
 - Running trial 8...
 - Running trial 9...
 - Running trial 10...
-Average runtime for DFT: 0.04952793121337891
-Average runtime for FFT: 0.013217830657958984
-Variance for DFT: 8.001201740626129e-07
-Variance for FFT: 6.629693643844803e-08
-Standard deviation for DFT with a 97% confidence interval: 0.0017889887356410188
-Standard deviation for FFT with a 97% confidence interval: 0.0005149638295587294
+Average runtime for DFT: 0.048558807373046874
+Average runtime for FFT: 0.012572765350341797
+Variance for DFT: 1.7308151655015534e-07
+Variance for FFT: 2.8275110253161984e-08
+Standard deviation for DFT with a 97% confidence interval: 0.0008320613356000995
+Standard deviation for FFT with a 97% confidence interval: 0.0003363040900920593
 Done running size 32================
 ===============Running for size 64...
 - Running trial 1...
@@ -27,12 +28,12 @@ Done running size 32================
 - Running trial 8...
 - Running trial 9...
 - Running trial 10...
-Average runtime for DFT: 0.39318480491638186
-Average runtime for FFT: 0.05576856136322021
-Variance for DFT: 6.979141539886769e-07
-Variance for FFT: 6.803156026137459e-05
-Standard deviation for DFT with a 97% confidence interval: 0.0016708251302738739
-Standard deviation for FFT with a 97% confidence interval: 0.016496249302356533
+Average runtime for DFT: 0.39239656925201416
+Average runtime for FFT: 0.051198053359985354
+Variance for DFT: 1.5175156752889052e-05
+Variance for FFT: 1.0151679680348024e-06
+Standard deviation for DFT with a 97% confidence interval: 0.007791060711581974
+Standard deviation for FFT with a 97% confidence interval: 0.002015110883336004
 Done running size 64================
 ===============Running for size 128...
 - Running trial 1...
@@ -45,12 +46,12 @@ Done running size 64================
 - Running trial 8...
 - Running trial 9...
 - Running trial 10...
-Average runtime for DFT: 3.148795008659363
-Average runtime for FFT: 0.21421360969543457
-Variance for DFT: 0.00018808469998532473
-Variance for FFT: 1.0286312317475677e-06
-Standard deviation for DFT with a 97% confidence interval: 0.02742879508730376
-Standard deviation for FFT with a 97% confidence interval: 0.002028429177218241
+Average runtime for DFT: 3.1234225988388062
+Average runtime for FFT: 0.20575242042541503
+Variance for DFT: 0.000790319989715158
+Variance for FFT: 3.984870577369292e-06
+Standard deviation for DFT with a 97% confidence interval: 0.05622526086076108
+Standard deviation for FFT with a 97% confidence interval: 0.0039924281220176236
 Done running size 128================
 ===============Running for size 256...
 - Running trial 1...
@@ -63,12 +64,12 @@ Done running size 128================
 - Running trial 8...
 - Running trial 9...
 - Running trial 10...
-Average runtime for DFT: 25.351105427742006
-Average runtime for FFT: 0.8690459728240967
-Variance for DFT: 0.00309892425006467
-Variance for FFT: 1.0097918982410193e-05
-Standard deviation for DFT with a 97% confidence interval: 0.11133596454092756
-Standard deviation for FFT with a 97% confidence interval: 0.006355444589455624
+Average runtime for DFT: 25.0378210067749
+Average runtime for FFT: 0.8244322538375854
+Variance for DFT: 0.017198533721009428
+Variance for FFT: 5.8052940383390704e-05
+Standard deviation for DFT with a 97% confidence interval: 0.26228636046130516
+Standard deviation for FFT with a 97% confidence interval: 0.015238496039096602
 Done running size 256================
 ===============Running for size 512...
 - Running trial 1...
@@ -81,11 +82,11 @@ Done running size 256================
 - Running trial 8...
 - Running trial 9...
 - Running trial 10...
-Average runtime for DFT: 204.12940962314605
-Average runtime for FFT: 3.4740222930908202
-Variance for DFT: 1.438100623307776
-Variance for FFT: 0.00044532150675649976
-Standard deviation for DFT with a 97% confidence interval: 2.3984166638078346
-Standard deviation for FFT with a 97% confidence interval: 0.0422052843495456
+Average runtime for DFT: 202.83057186603546
+Average runtime for FFT: 3.367807412147522
+Variance for DFT: 0.24661339898079232
+Variance for FFT: 0.0015599164836368115
+Standard deviation for DFT with a 97% confidence interval: 0.9932037031360532
+Standard deviation for FFT with a 97% confidence interval: 0.07899155609650468
 Done running size 512================
 Now plotting...
